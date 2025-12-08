@@ -2,95 +2,82 @@ import sys
 import time
 import math
 import random
+import collections
 import numpy as np
-import zlib
-import base64
 
-# Add path for imports
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# --- GAME CONSTANTS & BOARD ---
+GRID_SIZE = 8
+EMPTY = 0
+BLACK = 1
+WHITE = -1
+OBSTACLE = 2
 
-from core.game import Board, BLACK, WHITE, GRID_SIZE
+DIRECTIONS = [
+    (-1, -1), (-1, 0), (-1, 1),
+    (0, -1),           (0, 1),
+    (1, -1),  (1, 0),  (1, 1)
+]
 
-# --- Neural Network (Fully Connected, Smaller than v11) ---
-
-def relu(x):
-    return np.maximum(0, x)
-
-def tanh(x):
-    return np.tanh(x)
-
-def batch_norm_inference(x, gamma, beta, mean, var, eps=1e-5):
-    """Batch normalization in inference mode"""
-    return gamma * (x - mean) / np.sqrt(var + eps) + beta
-
-class NeuralNetV15:
+class Board:
     def __init__(self):
-        self.weights = {}
-        self.load_weights()
-        
-    def load_weights(self):
-        """Load weights from npz file"""
-        import os
-        weights_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'weights_v15.npz')
-        data = np.load(weights_path)
-        for key in data.files:
-            self.weights[key] = data[key]
-    
-    def predict(self, board_state):
-        """
-        board_state: (3, 8, 8) numpy array
-        Returns: scalar value [-1, 1]
-        """
-        # Flatten input
-        x = board_state.flatten()  # 192 features
-        
-        # Layer 1: Linear + BN + ReLU + Dropout(inference=no dropout)
-        w1 = self.weights['fc1.weight']
-        b1 = self.weights['fc1.bias']
-        x = np.dot(w1, x) + b1
-        
-        # Batch norm
-        gamma1 = self.weights['bn1.weight']
-        beta1 = self.weights['bn1.bias']
-        mean1 = self.weights['bn1.running_mean']
-        var1 = self.weights['bn1.running_var']
-        x = batch_norm_inference(x, gamma1, beta1, mean1, var1)
-        x = relu(x)
-        
-        # Layer 2
-        w2 = self.weights['fc2.weight']
-        b2 = self.weights['fc2.bias']
-        x = np.dot(w2, x) + b2
-        
-        gamma2 = self.weights['bn2.weight']
-        beta2 = self.weights['bn2.bias']
-        mean2 = self.weights['bn2.running_mean']
-        var2 = self.weights['bn2.running_var']
-        x = batch_norm_inference(x, gamma2, beta2, mean2, var2)
-        x = relu(x)
-        
-        # Layer 3
-        w3 = self.weights['fc3.weight']
-        b3 = self.weights['fc3.bias']
-        x = np.dot(w3, x) + b3
-        
-        gamma3 = self.weights['bn3.weight']
-        beta3 = self.weights['bn3.bias']
-        mean3 = self.weights['bn3.running_mean']
-        var3 = self.weights['bn3.running_var']
-        x = batch_norm_inference(x, gamma3, beta3, mean3, var3)
-        x = relu(x)
-        
-        # Output layer
-        w4 = self.weights['fc4.weight']
-        b4 = self.weights['fc4.bias']
-        x = np.dot(w4, x) + b4
-        x = tanh(x)
-        
-        return x[0]
+        self.grid = np.zeros((GRID_SIZE, GRID_SIZE), dtype=int)
+        self.init_board()
 
-# --- MCTS (Same as v13 with neural evaluation) ---
+    def init_board(self):
+        # Black
+        self.grid[0, 2] = BLACK
+        self.grid[2, 0] = BLACK
+        self.grid[5, 0] = BLACK
+        self.grid[7, 2] = BLACK
+        # White
+        self.grid[0, 5] = WHITE
+        self.grid[2, 7] = WHITE
+        self.grid[5, 7] = WHITE
+        self.grid[7, 5] = WHITE
+
+    def is_valid(self, x, y):
+        return 0 <= x < GRID_SIZE and 0 <= y < GRID_SIZE
+
+    def get_legal_moves(self, color):
+        moves = []
+        pieces = np.argwhere(self.grid == color)
+        
+        for px, py in pieces:
+            for dx, dy in DIRECTIONS:
+                nx, ny = px + dx, py + dy
+                while self.is_valid(nx, ny) and self.grid[nx, ny] == EMPTY:
+                    for adx, ady in DIRECTIONS:
+                        ax, ay = nx + adx, ny + ady
+                        while self.is_valid(ax, ay):
+                            is_blocked = False
+                            if self.grid[ax, ay] != EMPTY:
+                                if ax == px and ay == py:
+                                    pass
+                                else:
+                                    is_blocked = True
+                            if is_blocked:
+                                break
+                            moves.append((px, py, nx, ny, ax, ay))
+                            ax += adx
+                            ay += ady
+                    nx += dx
+                    ny += dy
+        return moves
+
+    def apply_move(self, move):
+        x0, y0, x1, y1, x2, y2 = move
+        piece = self.grid[x0, y0]
+        self.grid[x0, y0] = EMPTY
+        self.grid[x1, y1] = piece
+        self.grid[x2, y2] = OBSTACLE
+
+    def copy(self):
+        new_board = Board()
+        new_board.grid = self.grid.copy()
+        return new_board
+
+
+# --- AI MODULE ---
 
 class MCTSNode:
     def __init__(self, parent=None, move=None, player_just_moved=None):
@@ -102,7 +89,7 @@ class MCTSNode:
         self.untried_moves = None
         self.player_just_moved = player_just_moved
 
-    def uct_select_child(self, C=1.414):
+    def uct_select_child(self, C):
         log_visits = math.log(self.visits)
         best_score = -float('inf')
         best_child = None
@@ -114,21 +101,131 @@ class MCTSNode:
                 best_child = c
         return best_child
 
+# Game phase weights (simplified from opponent03's 28 sets to 3)
+EARLY_WEIGHTS = [0.08, 0.06, 0.60, 0.68, 0.02]  # turns 1-10
+MID_WEIGHTS = [0.13, 0.15, 0.45, 0.51, 0.07]    # turns 11-20  
+LATE_WEIGHTS = [0.11, 0.15, 0.38, 0.45, 0.10]   # turns 21+
+
 class MCTS:
-    def __init__(self, network, time_limit=3.8):
-        self.network = network
+    def __init__(self, time_limit=5.0):
         self.time_limit = time_limit
         self.root = None
+        self.turn_number = 0
 
-    def get_state_tensor(self, b, player):
-        state = np.zeros((3, 8, 8), dtype=np.float32)
-        grid = b.grid
-        my_val = player
-        opp_val = -player
-        state[0] = (grid == my_val).astype(np.float32)
-        state[1] = (grid == opp_val).astype(np.float32)
-        state[2] = (grid == 2).astype(np.float32)
-        return state
+    def get_phase_weights(self, turn):
+        """Get evaluation weights based on game phase"""
+        if turn <= 10:
+            return EARLY_WEIGHTS
+        elif turn <= 20:
+            return MID_WEIGHTS
+        else:
+            return LATE_WEIGHTS
+
+    def get_ucb_constant(self, turn):
+        """Dynamic UCB constant from opponent03"""
+        return 0.177 * math.exp(-0.008 * (turn - 1.41))
+
+    def bfs_territory(self, grid, pieces):
+        """BFS-based territory calculation"""
+        dist = np.full((GRID_SIZE, GRID_SIZE), 99, dtype=np.int8)
+        q = collections.deque()
+        
+        for px, py in pieces:
+            dist[px, py] = 0
+            q.append((px, py, 0))
+        
+        territory_by_dist = collections.defaultdict(int)
+        
+        while q:
+            x, y, d = q.popleft()
+            nd = d + 1
+            
+            for dx, dy in DIRECTIONS:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < 8 and 0 <= ny < 8:
+                    if grid[nx, ny] == EMPTY and dist[nx, ny] > nd:
+                        dist[nx, ny] = nd
+                        territory_by_dist[nd] += 1
+                        q.append((nx, ny, nd))
+        
+        return territory_by_dist, dist
+
+    def calc_position_score(self, pieces, dist_map):
+        """Position score with exponential decay (2^-d)"""
+        score = 0.0
+        for i in range(1, 8):
+            count = np.sum(dist_map == i)
+            score += count * (2.0 ** (-i))
+        return score
+
+    def calc_mobility(self, grid, pieces):
+        """Calculate mobility (available moves)"""
+        mobility = 0
+        for px, py in pieces:
+            for dx, dy in DIRECTIONS:
+                nx, ny = px + dx, py + dy
+                steps = 0
+                while 0 <= nx < 8 and 0 <= ny < 8 and grid[nx, ny] == EMPTY and steps < 7:
+                    mobility += 1
+                    nx += dx
+                    ny += dy
+                    steps += 1
+        return mobility
+
+    def evaluate_multi_component(self, grid, root_player):
+        """
+        Multi-component evaluation inspired by opponent03:
+        - Queen territory (BFS)
+        - King territory (BFS with king moves)
+        - Queen position (exponential decay)
+        - King position (weighted distance)
+        - Mobility
+        """
+        my_pieces = np.argwhere(grid == root_player)
+        opp_pieces = np.argwhere(grid == -root_player)
+        
+        # Component 1: Queen territory (use full BFS like v1)
+        my_q_terr, my_q_dist = self.bfs_territory(grid, my_pieces)
+        opp_q_terr, opp_q_dist = self.bfs_territory(grid, opp_pieces)
+        
+        queen_territory = sum(my_q_terr.values()) - sum(opp_q_terr.values())
+        
+        # Component 2: King territory (similar but conceptually separate)
+        # For simplicity, use same BFS but weight close squares more
+        king_territory = 0
+        for d in range(1, 4):  # King-like distance (close matters more)
+            king_territory += (my_q_terr.get(d, 0) - opp_q_terr.get(d, 0)) * (4 - d)
+        
+        # Component 3: Queen position (exponential decay by distance)
+        queen_position = self.calc_position_score(my_pieces, my_q_dist) - \
+                        self.calc_position_score(opp_pieces, opp_q_dist)
+        
+        # Component 4: King position (distance-weighted, simplified)
+        king_position = 0
+        for d in range(1, 7):
+            my_count = np.sum(my_q_dist == d)
+            opp_count = np.sum(opp_q_dist == d)
+            king_position += (my_count - opp_count) / (d + 1.0)
+        
+        # Component 5: Mobility
+        my_mobility = self.calc_mobility(grid, my_pieces)
+        opp_mobility = self.calc_mobility(grid, opp_pieces)
+        mobility = my_mobility - opp_mobility
+        
+        # Get phase-specific weights
+        weights = self.get_phase_weights(self.turn_number)
+        
+        # Weighted combination
+        score = (
+            weights[0] * queen_territory +
+            weights[1] * king_territory +
+            weights[2] * queen_position +
+            weights[3] * king_position +
+            weights[4] * mobility
+        ) * 0.20
+        
+        # Sigmoid normalization (from opponent03)
+        return 1.0 / (1.0 + math.exp(-score))
 
     def search(self, root_state, root_player):
         if self.root is None:
@@ -138,6 +235,9 @@ class MCTS:
         start_time = time.time()
         iterations = 0
         
+        # Dynamic UCB constant
+        C = self.get_ucb_constant(self.turn_number)
+        
         while time.time() - start_time < self.time_limit:
             node = self.root
             state = root_state.copy()
@@ -145,7 +245,7 @@ class MCTS:
 
             # Selection
             while node.untried_moves == [] and node.children:
-                node = node.uct_select_child()
+                node = node.uct_select_child(C)
                 state.apply_move(node.move)
                 current_player = -current_player
 
@@ -162,12 +262,8 @@ class MCTS:
                 node.children.append(new_node)
                 node = new_node
             
-            # Evaluation with neural network
-            nn_input = self.get_state_tensor(state, root_player)
-            value = self.network.predict(nn_input)
-            
-            # Normalize to [0, 1]
-            win_prob = (value + 1.0) / 2.0
+            # Evaluation (Multi-component)
+            win_prob = self.evaluate_multi_component(state.grid, root_player)
             
             # Backpropagation
             while node is not None:
@@ -199,23 +295,15 @@ class MCTS:
         self.root = None
 
 
-# --- MAIN ---
+# --- MAIN MODULE ---
 
 TIME_LIMIT = 3.8  
 FIRST_TURN_TIME_LIMIT = 5.8
 
 def main():
-    # Load neural network
-    try:
-        nn_model = NeuralNetV15()
-    except Exception as e:
-        sys.stderr.write(f"Error loading neural net: {e}\n")
-        sys.exit(1)
-
-    # Initialize MCTS with neural network
-    ai = MCTS(nn_model, time_limit=TIME_LIMIT)
     board = Board()
     my_color = None
+    ai = MCTS(time_limit=TIME_LIMIT)
     
     # --- FIRST TURN ---
     line = sys.stdin.readline()
@@ -245,6 +333,9 @@ def main():
         board.apply_move(coords)
         ai.advance_root(tuple(coords))
         
+    # Set turn number for phase weights
+    ai.turn_number = turn_id
+    
     limit = FIRST_TURN_TIME_LIMIT if turn_id == 1 else TIME_LIMIT
     ai.time_limit = limit
     
@@ -284,6 +375,9 @@ def main():
                 board.apply_move(opponent_move)
                 ai.advance_root(tuple(opponent_move))
 
+            # Update turn number
+            ai.turn_number += 1
+            
             ai.time_limit = TIME_LIMIT
             best_move = ai.search(board, my_color)
             
@@ -292,8 +386,8 @@ def main():
                 board.apply_move(best_move)
                 ai.advance_root(best_move)
             else:
-                print("-1 -1 -1 -1 -1 -1")
-                break
+                 print("-1 -1 -1 -1 -1 -1")
+                 break
                  
             print(">>>BOTZONE_REQUEST_KEEP_RUNNING<<<")
             sys.stdout.flush()
