@@ -57,6 +57,17 @@
   - Git commit best practices
   - Ensures continuity between sessions
 
+- **README Update Workflow** ✓ (NEW - Jan 8, 2025)
+  - `.clinerules/workflows/readme_update.md`: Comprehensive guide for maintaining README.md
+  - Modeled after memorybank.md workflow structure
+  - 7 update triggers (features, structure, milestones, user requests, etc.)
+  - 4 critical sections prioritized (Current Status, Setup, Usage, Bot Architecture)
+  - 6 common update scenarios with specific guidance
+  - Clear exclusion guidelines (what NOT to include in README)
+  - 8-step update process with flowchart and consistency checklist
+  - Emphasizes user-focused, concise, current content
+  - Git commit: 310124e
+
 - **Wiki documentation**: Botzone platform reference
   - Game rules and interaction protocols
   - Platform constraints and time limits
@@ -65,7 +76,7 @@
 - **Version control**: Git repository active
   - `.gitignore` configured
   - Multiple commits made
-  - Latest: b805f9b (clinerules reorganization)
+  - Latest: 310124e (README update workflow)
 
 ## What's Left to Build
 
@@ -309,5 +320,5 @@ None currently identified
 
 ---
 
-**Last Updated**: 2025-01-08 (Development infrastructure completed)
+**Last Updated**: 2025-01-08 (Development infrastructure and workflows completed)
 **Next Review**: After bot001 verification complete

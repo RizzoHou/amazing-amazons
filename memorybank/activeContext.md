@@ -7,6 +7,7 @@
 **Recent Activity** (January 8, 2025): 
 - Reorganized .clinerules into categorized files
 - Created task completion workflow in `.clinerules/workflows/`
+- Created README update workflow in `.clinerules/workflows/`
 - Created comprehensive implementation documentation for bot001.py
 - Documented all bot001 components in detail
 
@@ -52,9 +53,21 @@
    - Fixed numbering inconsistency (duplicate item #9)
    - Improved language: more specific instructions, clearer purpose statements, better titles
 
-3. **Git Commit**: 
-   - Committed documentation and .clinerules updates
-   - Latest commit: 7e0b13e8f35ecd06de9ff87dfa40883c91cdede3
+### Workflow Documentation (January 8, 2025)
+1. **README Update Workflow** (`.clinerules/workflows/readme_update.md`):
+   - Created comprehensive workflow for maintaining README.md
+   - Modeled after memorybank.md structure
+   - Includes 7 update triggers (features, structure, milestones, etc.)
+   - Prioritizes 4 critical sections (Current Status, Setup, Usage, Bot Architecture)
+   - Provides 6 common update scenarios with specific guidance
+   - Defines clear exclusion guidelines (what NOT to include in README)
+   - 8-step update process with flowchart and consistency checklist
+   - Emphasizes user-focused, concise, current content
+   - README is the user view; memory bank is the detailed context
+
+2. **Git Commit**: 
+   - Committed README update workflow
+   - Latest commit: 310124e
 
 #### Project Setup (Previous Session)
 1. **Memory Bank Creation**: Established comprehensive documentation system
