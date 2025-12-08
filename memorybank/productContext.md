@@ -27,8 +27,8 @@ This project exists to develop competitive AI bots for the Game of Amazons that 
 ### AI Strategy
 
 The current best bot (bot001) uses:
-- **Neural Network Evaluation**: 3-layer fully-connected network with batch normalization to evaluate board positions
-- **Monte Carlo Tree Search (MCTS)**: Explores game tree by balancing exploration vs exploitation
+- **Multi-Component Evaluation**: Five strategic components (territory, position, mobility) combined with phase-aware weights to evaluate board positions
+- **Monte Carlo Tree Search (MCTS)**: Explores game tree by balancing exploration vs exploitation with dynamic UCB constant
 - **Long-Running Optimization**: Maintains MCTS tree between turns to reuse computation
 
 ## Target Outcomes
@@ -49,10 +49,10 @@ The current best bot (bot001) uses:
 6. Iterate on improvements
 
 ### Key Pain Points Addressed
-- **Cold Start Overhead**: Long-running mode keeps neural network loaded and MCTS tree intact
+- **Cold Start Overhead**: Long-running mode keeps MCTS tree intact between turns
 - **Time Management**: Careful time budgeting ensures moves complete within limits
-- **Position Evaluation**: Neural network provides fast, learned evaluation vs slow heuristics
-- **Search Efficiency**: MCTS focuses computation on promising branches
+- **Position Evaluation**: Multi-component heuristic provides fast evaluation without rollout overhead
+- **Search Efficiency**: MCTS with dynamic UCB focuses computation on promising branches
 
 ## Interaction Model
 
@@ -65,5 +65,5 @@ The current best bot (bot001) uses:
 ### Between Bot Versions
 - Bots are versioned (bot001, bot002, etc.)
 - Previous versions archived for testing/comparison
-- Model weights stored separately in `models/` directory
-- Core game logic shared via `core/` module
+- Core game logic available in `core/` module (though bot001 is self-contained)
+- Each bot can have different evaluation strategies and MCTS parameters

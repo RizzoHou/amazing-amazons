@@ -10,19 +10,18 @@
 ### Libraries & Dependencies
 
 #### NumPy
-- **Purpose**: Fast array operations for board representation and neural network computation
+- **Purpose**: Fast array operations for board representation and evaluation computations
 - **Usage**: 
   - Board state stored as NumPy arrays
-  - Neural network operations (matrix multiplication, activation functions)
-  - Batch normalization calculations
+  - BFS territory calculations with efficient array operations
+  - Distance map computations for position scoring
 
 #### Standard Library
 - `sys`: I/O operations (stdin/stdout)
 - `time`: Time tracking for MCTS iterations
-- `math`: Mathematical operations (log, sqrt for UCT)
+- `math`: Mathematical operations (log, sqrt for UCT, exponential for sigmoid)
 - `random`: Random selection during MCTS expansion
-- `os`: File path operations for loading weights
-- `zlib` & `base64`: Compression utilities (imported but not actively used)
+- `collections`: deque for BFS territory calculation
 
 ### Evaluation System
 - **Custom Multi-Component Heuristic**: No machine learning dependency
@@ -43,15 +42,14 @@ amazing-amazons/
 │   └── ai.py             # Generic MCTS (legacy)
 ├── bots/                 # Bot implementations
 │   └── bot001.py         # Current best bot
-├── models/               # Neural network weights
-│   └── weights_v15.npz   # (referenced but not in repo)
-├── memorybank/           # Documentation
+├── docs/                 # Implementation documentation
+│   └── bot_implementation/ # Bot implementation details
+├── memorybank/           # Project documentation
 ├── wiki/                 # Botzone docs (PDF)
 ├── scripts/              # Testing utilities
 ├── logs/                 # Match logs
 ├── reports/              # Analysis reports
 ├── results/              # Performance metrics
-├── docs/                 # Additional documentation
 └── .gitignore           # Git configuration
 ```
 

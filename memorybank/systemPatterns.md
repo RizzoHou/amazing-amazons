@@ -10,8 +10,8 @@ amazing-amazons/
 │   ├── game.py       # Board representation and move generation
 │   └── ai.py         # Generic MCTS implementation
 ├── bots/             # Individual bot implementations
-│   └── bot001.py     # Current best bot (Neural MCTS)
-├── models/           # Neural network weights (referenced but not in repo)
+│   └── bot001.py     # Current best bot (Multi-Component MCTS)
+├── docs/             # Implementation documentation
 ├── memorybank/       # Project documentation
 ├── wiki/             # Botzone platform documentation
 └── scripts/          # Testing and utility scripts
@@ -22,14 +22,14 @@ amazing-amazons/
 ### 1. Long-Running Mode Architecture
 **Decision**: Implement bots using Botzone's long-running mode
 **Rationale**: 
-- Eliminates cold-start overhead for neural network initialization
+- Eliminates cold-start overhead
 - Preserves MCTS tree between turns for better search efficiency
 - Critical for Python bots which have higher startup costs
 
 **Implementation**:
 - First turn: Complete I/O cycle, output `>>>BOTZONE_REQUEST_KEEP_RUNNING<<<`
 - Subsequent turns: Process runs continuously, reads single request line per turn
-- State maintained: Board object, MCTS root node with tree, neural network
+- State maintained: Board object, MCTS root node with tree
 
 ### 2. Board Representation
 **Decision**: NumPy array-based board with integer encoding
@@ -215,8 +215,8 @@ score = (wins / visits) + C * sqrt(log(parent.visits) / visits)
 ## Error Handling
 
 - **No valid moves**: Output `-1 -1 -1 -1 -1 -1` and exit
-- **Neural network load failure**: Exit with error to stderr
 - **Unexpected input**: Bot may hang or crash (needs improvement)
+- **Minimal error handling**: Bot001 has basic exception catching but could be more robust
 
 ## Testing Strategy (Implied)
 
