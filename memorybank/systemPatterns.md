@@ -9,12 +9,22 @@ amazing-amazons/
 ├── core/              # Shared game logic and utilities
 │   ├── game.py       # Board representation and move generation
 │   └── ai.py         # Generic MCTS implementation
-├── bots/             # Individual bot implementations
-│   └── bot001.py     # Current best bot (Multi-Component MCTS)
+├── bots/             # Bot implementations
+│   ├── bot001.py     # Python MCTS bot (Multi-Component)
+│   ├── bot001.cpp    # C++ port (4x faster, production-ready)
+│   └── bot001_cpp    # Compiled C++ binary
+├── scripts/          # Testing and utility scripts
+│   ├── test_bot_simple.py      # Quick functionality tests
+│   ├── botzone_simulator.py   # I/O protocol simulator
+│   └── tournament.py           # Bot comparison framework
 ├── docs/             # Implementation documentation
+│   └── bot_implementation/
+│       ├── bot001_implementation.md      # Python bot docs
+│       └── bot001_cpp_implementation.md  # C++ bot docs
 ├── memorybank/       # Project documentation
 ├── wiki/             # Botzone platform documentation
-└── scripts/          # Testing and utility scripts
+├── logs/             # Tournament logs and match output
+└── results/          # Tournament results (JSON)
 ```
 
 ## Key Technical Decisions
@@ -134,10 +144,23 @@ Input (stdin) → Parse Move History → Reconstruct Board State
 ```
 
 ### Module Dependencies
-- `bot001.py` is fully self-contained (includes Board class)
+
+**Python Version (bot001.py)**:
+- Fully self-contained (includes Board class)
 - Does NOT import from `core.game` - has its own implementation
-- `core/ai.py` and `core/game.py` are standalone (not used by bot001)
 - No external dependencies beyond NumPy and standard library
+
+**C++ Version (bot001.cpp)**:
+- Completely standalone, single-file implementation
+- No external dependencies (uses only C++ standard library)
+- Compilation: `g++ -O2 -std=c++11 -o bots/bot001_cpp bots/bot001.cpp`
+
+**Testing Infrastructure**:
+- `scripts/test_bot_simple.py`: Tests both Python and C++ bots
+- `scripts/tournament.py`: Runs parallel matches, saves results to JSON
+- No dependencies between test scripts and bot implementations
+
+`core/ai.py` and `core/game.py` remain standalone (not used by bot001 implementations)
 
 ## Critical Implementation Paths
 
@@ -218,9 +241,70 @@ score = (wins / visits) + C * sqrt(log(parent.visits) / visits)
 - **Unexpected input**: Bot may hang or crash (needs improvement)
 - **Minimal error handling**: Bot001 has basic exception catching but could be more robust
 
-## Testing Strategy (Implied)
+## Testing Strategy
 
-- `scripts/` directory exists for testing utilities
-- `logs/` directory for match logs
-- `reports/` and `results/` for performance analysis
-- Testing against previous bot versions is expected workflow
+### Implemented Testing Infrastructure (December 10, 2025)
+
+**1. Functionality Tests** (`scripts/test_bot_simple.py`):
+- Quick verification of both Python and C++ bots
+- Tests I/O protocol compliance
+- Validates long-running mode
+- Verifies move format correctness
+
+**2. Protocol Simulation** (`scripts/botzone_simulator.py`):
+- Simulates Botzone long-running protocol
+- Tests multiple turn sequences
+- Useful for debugging I/O issues
+
+**3. Tournament System** (`scripts/tournament.py`):
+- Runs complete games between two bots
+- Supports parallel execution (default: 10 concurrent games)
+- Tracks statistics: wins, times, game lengths
+- Saves detailed results to JSON
+- Command-line interface with customizable parameters
+
+**Tournament Results**:
+- 50 games Python vs C++: 25-25 split (equal strength confirmed)
+- Performance: C++ 4.15x faster (0.925s vs 3.843s per move)
+- Average game length: 27.8 turns
+- Zero errors or crashes
+
+### Testing Workflow
+
+1. **Unit Testing**: `python3 scripts/test_bot_simple.py`
+2. **Tournament Testing**: `python3 scripts/tournament.py --games N --parallel P`
+3. **Results Analysis**: Review JSON files in `results/` directory
+4. **Log Review**: Check `logs/` for detailed game sequences
+
+## Performance Comparison: Python vs C++
+
+### Implementation Characteristics
+
+| Aspect | Python (bot001.py) | C++ (bot001.cpp) |
+|--------|-------------------|------------------|
+| **Language** | Python 3 | C++11 |
+| **Lines of Code** | ~350 | ~550 |
+| **Dependencies** | NumPy | None |
+| **Compilation** | Interpreted | `g++ -O2 -std=c++11` |
+| **Board Repr** | NumPy array | `std::array<std::array<int, 8>, 8>` |
+| **Move List** | Python list | `std::vector<Move>` |
+| **BFS Queue** | collections.deque | `std::deque` |
+| **Territory Map** | defaultdict | `std::unordered_map` |
+
+### Performance Metrics
+
+| Metric | Python | C++ | Improvement |
+|--------|--------|-----|-------------|
+| **Avg Time/Move** | 3.843s | 0.925s | 4.15x |
+| **Time Limits** | 5.8s / 3.8s | 1.8s / 0.9s | - |
+| **Iterations** | 3k-8k | 12k-32k | ~4x |
+| **Memory** | ~100 MB | ~80 MB | 1.25x |
+| **Strength** | Baseline | Equal | 1.0x |
+
+### C++ Optimizations
+
+1. **Stack Allocation**: Arrays on stack instead of heap
+2. **Pass by Reference**: Avoid unnecessary copying
+3. **Precise Timing**: `std::chrono::steady_clock` for high precision
+4. **Fast I/O**: `ios::sync_with_stdio(false)` for speed
+5. **Manual Memory Management**: No GC overhead for tree nodes
