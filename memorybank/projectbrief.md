@@ -36,10 +36,30 @@ Amazing Amazons is a project focused on developing high-intelligence AI bots for
 - Single CPU core (multi-threading doesn't improve performance)
 
 ## Current State
-- One working bot imported from previous project: `bots/bot001.py`
-- Bot001 is currently the best-performing bot
+
+### Bot Implementations
+- **bot001.py**: Python implementation (Multi-Component MCTS)
+  - Imported from previous project
+  - Fully functional and tested
+  - Average 3.8s per move, 3k-8k MCTS iterations
+  
+- **bot001.cpp**: C++ port (Production-ready)
+  - Complete port maintaining identical algorithm
+  - 4.15x faster than Python (0.9s vs 3.8s per move)
+  - 12k-32k MCTS iterations per turn
+  - No external dependencies
+  - Tournament validated: Equal strength to Python version
+
+### Testing Infrastructure
+- **test_bot_simple.py**: Quick functionality verification
+- **botzone_simulator.py**: I/O protocol simulation
+- **tournament.py**: Bot comparison framework with parallel execution
+- Tournament results: 50 games, 25-25 split confirming equal strength
+
+### Project Resources
 - Core game logic implemented in `core/game.py`
 - Additional AI utilities in `core/ai.py` (older MCTS implementation)
+- Comprehensive documentation in `docs/bot_implementation/`
 - Wiki documentation stored in `wiki/` folder for reference
 
 ## Success Criteria
