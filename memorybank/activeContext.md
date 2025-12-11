@@ -2,9 +2,25 @@
 
 ## Current Work Focus
 
-**Status**: C++ implementation and testing infrastructure complete. Both bots production-ready for Botzone deployment.
+**Status**: C++ implementation and testing infrastructure complete. Optimization request document created for further bot improvements.
 
-**Recent Activity** (December 10, 2025):
+**Recent Activity** (November 12, 2025):
+- Created comprehensive optimization request document (`docs/requests/cpp_bot_optimization_request.md`)
+- Documented current performance: 12k-32k iterations/turn, 4.15× faster than Python
+- Identified bottlenecks: Move generation (35%), BFS territory (30%), memory allocation (15%)
+- Prepared 10 specific optimization questions covering:
+  - Move ordering heuristics
+  - BFS optimization and caching strategies
+  - Custom memory allocators
+  - Transposition tables with Zobrist hashing
+  - Bitboard representation feasibility
+  - Progressive widening and MCTS enhancements
+- Included detailed code snippets of hot paths for analysis
+- Prioritized optimizations by impact: Tier 1 (move ordering, BFS, allocator), Tier 2 (board representation, compiler flags), Tier 3 (transposition table, bitboards)
+- Document ready to share with DeepSeek for expert optimization advice
+- Goal: 50-100% more MCTS iterations (target: 18k-65k per turn)
+
+**Previous Activity** (December 10, 2025):
 - Created complete C++ port of bot001 (bot001.cpp)
 - Built comprehensive testing infrastructure (3 scripts)
 - Ran 50-game tournament: Python vs C++ validation

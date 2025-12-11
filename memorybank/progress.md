@@ -47,12 +47,22 @@
   - Includes algorithm analysis, design rationale, performance tuning
   - Built incrementally following .clinerules best practices
 
-- **Bot001 C++ Implementation Documentation** ✓ (NEW - Dec 10, 2025)
+- **Bot001 C++ Implementation Documentation** ✓ (Dec 10, 2025)
   - `docs/bot_implementation/bot001_cpp_implementation.md`: Complete C++ port documentation
   - Covers architecture, compilation, testing, and performance
   - Includes tournament results (50 games Python vs C++)
   - Performance analysis and comparison tables
   - Usage instructions for local testing and Botzone submission
+
+- **Optimization Request Documentation** ✓ (NEW - Nov 12, 2025)
+  - `docs/requests/cpp_bot_optimization_request.md`: Comprehensive optimization request for DeepSeek
+  - Documents current performance: 12k-32k iterations/turn, 4.15× faster than Python
+  - Identifies bottlenecks: Move generation (35%), BFS territory (30%), memory allocation (15%)
+  - 10 specific optimization questions with detailed technical context
+  - Code snippets of hot paths (move generation, BFS, MCTS loop)
+  - Prioritized optimization tiers by impact vs effort
+  - Target: 50-100% more MCTS iterations
+  - Ready for expert consultation
   
 - **Development Rules Organization** ✓ (NEW - Jan 8, 2025)
   - Reorganized `.clinerules/basic_requirements.md` into 5 focused files:
