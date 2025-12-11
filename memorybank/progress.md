@@ -93,6 +93,24 @@
   - Emphasizes user-focused, concise, current content
   - Git commit: 310124e
 
+- **Enhanced Workflow Documentation** ✓ (NEW - Nov 12, 2025)
+  - Updated `task_completion.md` with README update step (was missing)
+  - Added `projectbrief.md` reminder in memory bank update section (was missing)
+  - Created `.clinerules/workflows/memory_bank_update.md`: Standalone memory bank maintenance workflow
+    - Comprehensive guide for all 6 core memory bank files
+    - File hierarchy diagram showing relationships
+    - Detailed update guidelines with specific triggers for each file
+    - Special handling for "update memory bank" requests
+    - Verification checklist and consistency checks
+  - Created `.clinerules/workflows/git_status_clear.md`: Standalone git commit workflow
+    - Comprehensive commit message guidelines with good/bad examples
+    - Common scenarios (single commit, multiple commits, WIP)
+    - Logical grouping guidelines for commits
+    - Focus on committing to current branch
+    - Best practices and troubleshooting section
+  - All three workflows now cross-reference each other
+  - Git commit: f9593b5
+
 - **README.md Updated** ✓ (NEW - Jan 8, 2025)
   - Applied README update workflow to synchronize with current project state
   - Updated Current Status section with recent achievements (workflows, documentation)

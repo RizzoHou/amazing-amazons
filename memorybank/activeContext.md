@@ -2,9 +2,26 @@
 
 ## Current Work Focus
 
-**Status**: C++ implementation and testing infrastructure complete. Optimization request document created for further bot improvements.
+**Status**: Workflow documentation enhanced with separate workflows for memory bank updates and git operations.
 
 **Recent Activity** (November 12, 2025):
+- Enhanced workflow documentation system with three comprehensive workflows
+- Updated `task_completion.md` to include README update step (was missing)
+- Added `projectbrief.md` reminder to memory bank update section (was missing)
+- Created `memory_bank_update.md` - standalone workflow for memory bank maintenance
+  - Includes all 6 core files with projectbrief.md explicitly listed
+  - File hierarchy diagram showing relationships
+  - Detailed update guidelines for each file
+  - Special handling for "update memory bank" requests
+- Created `git_status_clear.md` - standalone workflow for git commit operations
+  - Comprehensive commit message guidelines with examples
+  - Common scenarios and logical grouping advice
+  - Focus on committing to current branch
+  - Best practices and troubleshooting
+- All three workflows cross-reference each other for easy navigation
+- Git commit: f9593b5
+
+**Previous Activity** (November 12, 2025):
 - Created comprehensive optimization request document (`docs/requests/cpp_bot_optimization_request.md`)
 - Documented current performance: 12k-32k iterations/turn, 4.15× faster than Python
 - Identified bottlenecks: Move generation (35%), BFS territory (30%), memory allocation (15%)
