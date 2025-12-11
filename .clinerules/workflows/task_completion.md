@@ -19,11 +19,29 @@ Update the memory bank to reflect changes made during the task:
   - What's now working
   - Any new known issues
 - Update other relevant memory bank files as needed:
+  - `projectbrief.md` if core requirements, scope, or goals evolved
   - `systemPatterns.md` if architecture or patterns changed
   - `techContext.md` if technologies or setup changed
   - `productContext.md` if requirements or understanding evolved
 
-### 2. Clear Git Status Output
+**See detailed workflow**: `.clinerules/workflows/memory_bank_update.md`
+
+### 2. Update README
+
+Keep README.md synchronized with current project state:
+
+- Update after major features, milestones, or structural changes
+- Focus on user-facing sections:
+  - **Current Status**: Align with progress.md milestones
+  - **Setup/Installation**: Keep steps accurate and tested
+  - **Usage**: Update commands and examples
+  - **Project Structure**: Reflect actual file organization
+- Keep README concise and user-focused (detailed docs belong elsewhere)
+- Test any commands or examples before committing
+
+**See detailed workflow**: `.clinerules/workflows/readme_update.md`
+
+### 3. Clear Git Status Output
 
 Clean up the git working directory:
 
@@ -45,6 +63,8 @@ git status
 ```
 
 The output should show "nothing to commit, working tree clean".
+
+**See detailed workflow**: `.clinerules/workflows/git_status_clear.md`
 
 ## Execution Notes
 
