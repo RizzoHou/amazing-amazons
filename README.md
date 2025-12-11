@@ -38,9 +38,11 @@ amazing-amazons/
 ├── reports/          # Analysis reports
 ├── results/          # Tournament results (JSON)
 └── docs/             # Implementation documentation
-    └── bot_implementation/
-        ├── bot001_implementation.md      # Python bot documentation
-        └── bot001_cpp_implementation.md  # C++ bot documentation
+    ├── bot_implementation/
+    │   ├── bot001_implementation.md      # Python bot documentation
+    │   └── bot001_cpp_implementation.md  # C++ bot documentation
+    └── requests/
+        └── cpp_bot_optimization_request.md  # Optimization request for expert consultation
 ```
 
 ## Setup
@@ -75,7 +77,13 @@ pip install numpy
 🔄 **Ready**: Botzone submission  
 📅 **Planned**: Performance optimization and advanced features
 
-**Recent Updates** (December 10, 2025):
+**Recent Updates** (November 12, 2025):
+- Created comprehensive optimization request document for expert consultation
+- Documented current performance bottlenecks (move generation 35%, BFS 30%, memory 15%)
+- Prepared 10 specific optimization questions with code snippets
+- Target: 50-100% more MCTS iterations through optimization
+
+**Previous Updates** (December 10, 2025):
 - Created C++ port of bot001 (4x faster, production-ready)
 - Built comprehensive testing infrastructure (3 test scripts)
 - Ran 50-game tournament: Python vs C++ (equal strength confirmed)
