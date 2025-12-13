@@ -32,6 +32,23 @@
   - No external dependencies, standalone binary
   - Compilation: `g++ -O2 -std=c++11 -o bots/bot001_cpp bots/bot001.cpp`
 
+- **Bot002 C++** (`bots/bot002.cpp`): Optimized version ✓ (NEW - Dec 13, 2025)
+  - Based on DeepSeek's optimization plan
+  - **Bitboard representation**: 3x uint64_t instead of 8x8 array
+  - **Optimized move generation**: Bitwise operations, no bounds checking
+  - **Fast BFS**: Fixed arrays instead of containers, on-the-fly weight accumulation
+  - **Xorshift64 PRNG**: Faster than mt19937
+  - **Move ordering** (root only): Centrality + arrow proximity heuristic
+  - **Node pool allocator**: Arena-based memory management
+  - **Aggressive compiler flags**: -O3 -march=native -flto
+  - **Critical fixes** for Botzone time limits:
+    - Removed expensive move ordering from inner loops (was called on every node!)
+    - Reduced memory allocation overhead (50MB → 10MB)
+    - Fixed pool reset bug that destroyed kept tree
+    - Conservative time limits: 1.6s/0.8s (vs 2s/1s Botzone limits)
+  - Compilation: `g++ -O3 -march=native -flto -std=c++11 -o bots/bot002_cpp bots/bot002.cpp`
+  - **Status**: Ready for Botzone, should stay within time limits
+
 ### Documentation ✓
 - **Memory bank**: Complete and updated
   - `projectbrief.md`: Project overview and objectives

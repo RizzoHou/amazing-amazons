@@ -2,9 +2,28 @@
 
 ## Current Work Focus
 
-**Status**: Workflow documentation enhanced with separate workflows for memory bank updates and git operations.
+**Status**: Bot002 created with optimized bitboard implementation. Fixed critical time limit issues from Botzone deployment.
 
-**Recent Activity** (November 12, 2025):
+**Recent Activity** (December 13, 2025):
+- **Created bot002.cpp**: Optimized version based on DeepSeek's optimization plan
+  - Implemented bitboard representation (3x uint64_t vs 8x8 array)
+  - Optimized move generation with bitwise operations
+  - Fast BFS with fixed arrays and on-the-fly weight accumulation
+  - Xorshift64 PRNG (faster than mt19937)
+  - Move ordering heuristic (centrality + arrow proximity)
+  - Node pool allocator for memory efficiency
+  - Aggressive compiler flags: -O3 -march=native -flto
+- **Fixed critical time limit issues** reported from Botzone:
+  - Move ordering was being called on EVERY node (hundreds/second) - extremely expensive
+  - Fixed: Only order moves for root node, skip for all child nodes
+  - Reduced memory allocation from 50MB to 10MB
+  - Fixed pool reset bug that destroyed kept subtree
+  - Added conservative time limits: 1.6s/0.8s (vs 2s/1s limits) for safety buffer
+- **Compilation**: `g++ -O3 -march=native -flto -std=c++11 -o bots/bot002_cpp bots/bot002.cpp`
+- **Testing**: Bot002 runs correctly, respects time limits
+- **Ready for Botzone**: Fixed version should stay within time limits
+
+**Previous Activity** (November 12, 2025):
 - Enhanced workflow documentation system with three comprehensive workflows
 - Updated `task_completion.md` to include README update step (was missing)
 - Added `projectbrief.md` reminder to memory bank update section (was missing)
