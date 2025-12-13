@@ -27,7 +27,9 @@ amazing-amazons/
 ├── bots/             # Bot implementations
 │   ├── bot001.py     # Python MCTS bot (Multi-Component)
 │   ├── bot001.cpp    # C++ port (4x faster, production-ready)
-│   └── bot001_cpp    # Compiled C++ binary
+│   ├── bot001_cpp    # Compiled C++ binary
+│   ├── bot002.cpp    # Optimized C++ bot (bitboards, faster)
+│   └── bot002_cpp    # Compiled optimized binary
 ├── scripts/          # Testing and utility scripts
 │   ├── test_bot_simple.py      # Quick bot functionality tests
 │   ├── botzone_simulator.py   # I/O protocol simulator
@@ -73,11 +75,23 @@ pip install numpy
 
 ## Current Status
 
-✅ **Complete**: Bot verification, testing infrastructure, and C++ implementation  
-🔄 **Ready**: Botzone submission  
-📅 **Planned**: Performance optimization and advanced features
+✅ **Complete**: Bot001 C++ port, testing infrastructure, and bot002 optimized version  
+🔄 **Ready**: Bot002 for Botzone submission (time limits fixed)  
+📅 **Planned**: Performance validation and advanced features
 
-**Recent Updates** (November 12, 2025):
+**Recent Updates** (December 13, 2025):
+- **Created bot002.cpp**: Optimized version with bitboard representation
+  - Bitboard move generation (3x uint64_t vs 8x8 array)
+  - Fast BFS with fixed arrays and on-the-fly accumulation
+  - Xorshift64 PRNG, node pool allocator
+  - Move ordering heuristic (root only)
+- **Fixed critical Botzone time limit issues**:
+  - Removed expensive move ordering from inner loops (was called on every node!)
+  - Conservative time limits: 1.6s/0.8s (vs 2s/1s limits)
+  - Reduced memory overhead, fixed pool reset bug
+- Compiled with aggressive flags: -O3 -march=native -flto
+
+**Previous Updates** (November 12, 2025):
 - Created comprehensive optimization request document for expert consultation
 - Documented current performance bottlenecks (move generation 35%, BFS 30%, memory 15%)
 - Prepared 10 specific optimization questions with code snippets
