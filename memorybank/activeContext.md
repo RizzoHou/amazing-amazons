@@ -2,9 +2,23 @@
 
 ## Current Work Focus
 
-**Status**: Bot002 bug fix completed. Fixed illegal move issue caused by color tracking error in move replay.
+**Status**: Memory bank workflow enhanced. Updated documentation to enforce reviewing all 6 core files during updates.
 
 **Recent Activity** (December 14, 2025):
+- **Enhanced memory bank update workflow** to ensure ALL files are reviewed:
+  - Modified `.clinerules/memorybank.md` with mandatory "MANDATORY Update Workflow" section
+  - Added explicit flowchart showing Step 1: READ ALL FILES (MANDATORY) before any updates
+  - Created comprehensive "Required Reading Checklist" with all 6 core files
+  - Added "Why All Files Matter" section explaining importance of each file
+  - Updated `.clinerules/workflows/memory_bank_update.md` with matching requirements
+  - Added 4-phase process: Phase 1: READ EVERYTHING → Phase 2: ANALYZE → Phase 3: UPDATE → Phase 4: VERIFY
+  - Included explicit `read_file` commands for each file in special case section
+  - Strong emphasis: "DO NOT SKIP ANY FILES" and "DO NOT START UPDATING until you have read all 6 core files"
+  - **Problem solved**: Prevents tendency to only review activeContext.md and progress.md
+  - **Git commits**: Workflow documentation updates
+- **Executed the new workflow**: Read all 6 core memory bank files following new mandatory process
+
+**Previous Activity** (December 14, 2025):
 - **Fixed critical bug in bot002.cpp**: Resolved INVALIDMOVE errors on Botzone
   - **Root cause**: Color tracking logic during game history replay was incorrect
   - Moves were being applied to wrong player's queens, causing board state desynchronization

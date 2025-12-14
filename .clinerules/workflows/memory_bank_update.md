@@ -30,18 +30,26 @@ projectbrief.md (Foundation - rarely changes)
 
 ## Comprehensive Update Process
 
-### Step 1: Review ALL Files
+### Step 1: READ ALL FILES (MANDATORY - NO EXCEPTIONS)
 
-Start by reading every memory bank file to understand current state:
+**CRITICAL RULE**: Before making ANY updates, you MUST read EVERY core memory bank file using `read_file`. This is not optional.
 
-- [ ] `projectbrief.md` - Foundation document
-- [ ] `productContext.md` - Product understanding  
-- [ ] `systemPatterns.md` - Architecture patterns
-- [ ] `techContext.md` - Technical setup
-- [ ] `activeContext.md` - Current context
-- [ ] `progress.md` - Current status
+**Required Reading Order** (use `read_file` on each):
 
-**Critical**: When user says **update memory bank**, you MUST review ALL files, even if some don't need updates.
+1. [ ] `projectbrief.md` - Foundation document that shapes everything
+2. [ ] `productContext.md` - Product goals and user experience
+3. [ ] `systemPatterns.md` - Architecture and design patterns  
+4. [ ] `techContext.md` - Technologies and development setup
+5. [ ] `activeContext.md` - Current work and recent changes
+6. [ ] `progress.md` - Status tracking and accomplishments
+
+**Why ALL Files Matter**:
+- Cannot determine what needs updating without reading everything first
+- Ensures updates maintain consistency across all documentation
+- Prevents losing important context or creating contradictions
+- Each file provides essential perspective on the project state
+
+**REMEMBER**: After memory reset, you know NOTHING about the project. You cannot know what needs updating without reading all files first. Skipping files = incomplete understanding = poor updates.
 
 ### Step 2: Update Priority Files
 
@@ -156,18 +164,50 @@ Capture key learnings:
 
 ## Special Case: User Requests "Update Memory Bank"
 
-When user explicitly requests a memory bank update:
+When user explicitly requests a memory bank update, follow this MANDATORY sequence:
 
-1. **Read ALL six core files** - Even if some seem up-to-date
-2. **Focus particularly on**:
-   - `activeContext.md` - Most likely to need updates
-   - `progress.md` - Track recent accomplishments
-3. **Look for gaps**:
-   - Recent work not documented
-   - Stale information that's changed
-   - Missing context about decisions
-4. **Update comprehensively**: Don't just update one file
-5. **Verify consistency**: Ensure files tell a coherent story
+### Phase 1: READ EVERYTHING (No Updates Yet)
+
+**YOU MUST USE `read_file` ON EACH FILE INDIVIDUALLY:**
+
+```
+1. read_file("memorybank/projectbrief.md")
+2. read_file("memorybank/productContext.md")
+3. read_file("memorybank/systemPatterns.md")
+4. read_file("memorybank/techContext.md")
+5. read_file("memorybank/activeContext.md")
+6. read_file("memorybank/progress.md")
+```
+
+**DO NOT SKIP ANY FILES** - You cannot know what needs updating without reading everything first.
+
+**DO NOT START UPDATING** until you have read all 6 core files.
+
+### Phase 2: ANALYZE (After Reading All Files)
+
+Now that you've read everything, identify:
+
+- **Recent work not documented** - What changed that isn't captured?
+- **Stale information** - What's documented but no longer accurate?
+- **Missing context about decisions** - Were important choices made without rationale?
+- **Inconsistencies between files** - Do files contradict each other?
+- **Gaps in current status** - Is activeContext.md and progress.md current?
+
+### Phase 3: UPDATE (Make Changes)
+
+Only after reading all files and analyzing, update:
+
+1. **activeContext.md** - Most frequently needs updates for current work
+2. **progress.md** - Update status and accomplishments
+3. **Other files as needed** - Based on analysis from Phase 2
+
+### Phase 4: VERIFY
+
+Ensure:
+- [ ] All 6 core files were read before any updates
+- [ ] Updates maintain consistency across files
+- [ ] Files tell a coherent story together
+- [ ] Nothing important was missed
 
 ## Verification Checklist
 

@@ -119,7 +119,7 @@
   - Emphasizes user-focused, concise, current content
   - Git commit: 310124e
 
-- **Enhanced Workflow Documentation** ✓ (NEW - Nov 12, 2025)
+- **Enhanced Workflow Documentation** ✓ (Nov 12, 2025)
   - Updated `task_completion.md` with README update step (was missing)
   - Added `projectbrief.md` reminder in memory bank update section (was missing)
   - Created `.clinerules/workflows/memory_bank_update.md`: Standalone memory bank maintenance workflow
@@ -136,6 +136,25 @@
     - Best practices and troubleshooting section
   - All three workflows now cross-reference each other
   - Git commit: f9593b5
+
+- **Memory Bank Workflow Enhancement** ✓ (NEW - Dec 14, 2025)
+  - **Problem identified**: Cline was only reviewing activeContext.md and progress.md during memory bank updates
+  - **Solution implemented**: Enhanced workflow to MANDATE reading all 6 core files
+  - Updated `.clinerules/memorybank.md`:
+    - Added "MANDATORY Update Workflow" section with explicit flowchart
+    - Step 1: READ ALL FILES (MANDATORY) before Step 2: UPDATE AS NEEDED
+    - Created "Required Reading Checklist" listing all 6 files
+    - Added "Why All Files Matter" section explaining importance of each
+    - Strong emphasis with CRITICAL RULES and bold formatting
+  - Updated `.clinerules/workflows/memory_bank_update.md`:
+    - Strengthened "Step 1: READ ALL FILES (MANDATORY - NO EXCEPTIONS)" section
+    - Added explicit 4-phase process for "update memory bank" requests:
+      - Phase 1: READ EVERYTHING (No Updates Yet) - with explicit `read_file` commands
+      - Phase 2: ANALYZE (After Reading All Files)
+      - Phase 3: UPDATE (Make Changes)
+      - Phase 4: VERIFY
+    - Strong language: "DO NOT SKIP ANY FILES" and "DO NOT START UPDATING"
+  - **Result**: Workflow now enforces comprehensive review preventing incomplete updates
 
 - **README.md Updated** ✓ (NEW - Jan 8, 2025)
   - Applied README update workflow to synchronize with current project state

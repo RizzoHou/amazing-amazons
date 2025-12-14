@@ -96,20 +96,54 @@ Memory Bank updates occur when:
 3. When user requests with **update memory bank** (MUST review ALL files)
 4. When context needs clarification
 
+### MANDATORY Update Workflow
+
+When updating the Memory Bank, I MUST follow this exact sequence:
+
 flowchart TD
     Start[Update Process]
 
-    subgraph Process
-        P1[Review ALL Files]
-        P2[Document Current State]
-        P3[Clarify Next Steps]
-        P4[Document Insights & Patterns]
+    subgraph "Step 1: READ ALL FILES (MANDATORY)"
+        R1[Read projectbrief.md]
+        R2[Read productContext.md]
+        R3[Read systemPatterns.md]
+        R4[Read techContext.md]
+        R5[Read activeContext.md]
+        R6[Read progress.md]
+        R7[Read any additional context files]
 
-        P1 --> P2 --> P3 --> P4
+        R1 --> R2 --> R3 --> R4 --> R5 --> R6 --> R7
     end
 
-    Start --> Process
+    subgraph "Step 2: UPDATE AS NEEDED"
+        U1[Update files requiring changes]
+        U2[Document rationale for updates]
+    end
 
-Note: When triggered by **update memory bank**, I MUST review every memory bank file, even if some don't require updates. Focus particularly on activeContext.md and progress.md as they track current state.
+    Start --> R1
+    R7 --> U1
+    U1 --> U2
 
-REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
+**CRITICAL RULES:**
+1. **I MUST read EVERY core memory bank file** - No exceptions, no skipping
+2. **Read first, update second** - I cannot determine what needs updating without reading everything first
+3. **Explicit file review** - I must use `read_file` on each core file individually to ensure thorough review
+4. **Complete before updating** - All 6 core files must be read before any updates are made
+
+**Required Reading Checklist (Use this EVERY time):**
+- [ ] projectbrief.md - Foundation and scope
+- [ ] productContext.md - Product goals and user experience  
+- [ ] systemPatterns.md - Architecture and design patterns
+- [ ] techContext.md - Technologies and setup
+- [ ] activeContext.md - Current work and recent changes
+- [ ] progress.md - Status and what's next
+
+**Why All Files Matter:**
+- `projectbrief.md` - Ensures updates align with core project goals
+- `productContext.md` - Maintains focus on user needs and product vision
+- `systemPatterns.md` - Prevents architectural drift and maintains consistency
+- `techContext.md` - Keeps technical decisions and constraints visible
+- `activeContext.md` - Tracks immediate context and decisions
+- `progress.md` - Records what works, what's left, and current status
+
+**REMEMBER:** After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. I cannot know what needs updating without reading ALL files first. Skipping files means losing context and making uninformed updates.
