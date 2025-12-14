@@ -50,6 +50,15 @@ Amazing Amazons is a project focused on developing high-intelligence AI bots for
   - No external dependencies
   - Tournament validated: Equal strength to Python version
 
+- **bot002.cpp**: Optimized C++ bot (Stable, crash-free)
+  - Based on DeepSeek's optimization plan
+  - Bitboard representation (3x uint64_t)
+  - Optimized move generation and fast BFS
+  - Critical fixes for Botzone crashes applied
+  - Tournament tested: Zero crashes in 20 games
+  - Faster (1.128s/move) but strategically weaker than bot001
+  - Ready for Botzone deployment
+
 ### Testing Infrastructure
 - **test_bot_simple.py**: Quick functionality verification
 - **botzone_simulator.py**: I/O protocol simulation
