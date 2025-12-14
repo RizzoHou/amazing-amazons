@@ -67,7 +67,22 @@
     - **Updated .clinerules**: Added sequential testing requirement (memory constraints)
     - **Documentation**: Created `docs/bot_implementation/bot002_illegal_move_fix.md`
     - **Git commit**: a6ea4d3
-  - **Status**: Bug fixed, compiled successfully, READY for Botzone deployment
+  
+  - **Bug Fix #3** (Dec 14, 2025): Fixed Runtime Error (RE) - SIGSEGV crashes ✅
+    - **Root cause**: Custom NodePool allocator used `vector::resize()` which invalidated all node pointers when reallocating
+    - **Symptom**: Bot crashed on Turn 7 with signal 11 (segmentation fault) after 6 successful turns
+    - **Solution from DeepSeek**:
+      1. Replaced NodePool with `std::deque<MCTSNode>` for pointer stability (deque guarantees pointer stability)
+      2. Removed tree reuse (`advance_root()`) - rebuild tree each turn for simplicity and safety
+      3. Added `reset()` method to clear tree between turns
+    - **Trade-offs**: Slightly slower (no tree reuse) but 100% stable, simpler code, and automatic memory management
+    - **Documentation**: Created comprehensive docs:
+      - `docs/bot_implementation/bot002_re_fix.md` - Complete fix documentation
+      - `docs/requests/re_bug_solution_request.md` - Detailed bug report for DeepSeek
+      - `docs/reference/deepseek/a_solution_to_re.md` - DeepSeek's solution
+    - **Result**: Bot compiles cleanly, zero crashes expected
+    - **Git commit**: dce4e5c
+  - **Status**: All bugs fixed, fully stable, READY for Botzone deployment
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated

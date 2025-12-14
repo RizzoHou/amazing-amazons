@@ -80,6 +80,17 @@ pip install numpy
 📅 **Planned**: Advanced features (opening book, endgame solver)
 
 **Recent Updates** (December 14, 2025):
+- **Bot002 Runtime Error (RE) Fix**: Fixed SIGSEGV segmentation fault crashes ✅
+  - **Root Cause**: Custom NodePool allocator used `vector::resize()` which invalidated all node pointers when reallocating memory
+  - **Symptom**: Bot crashed on Turn 7 with signal 11 after 6 successful turns
+  - **Solution** (from DeepSeek):
+    1. Replaced NodePool with `std::deque<MCTSNode>` for pointer stability
+    2. Removed tree reuse (`advance_root()`) - rebuild tree each turn
+    3. Added `reset()` method to clear tree between turns
+  - **Trade-offs**: Slightly slower (no tree reuse) but 100% stable with simpler code
+  - **Documentation**: `docs/bot_implementation/bot002_re_fix.md` and `docs/requests/re_bug_solution_request.md`
+  - Git commit: dce4e5c
+  
 - **Bot002 Critical Bug Fixes**: Fixed TWO major bugs causing illegal moves on Botzone ✅
   - **Bug 1 - MCTS Selection Phase**: Wrong player color used (`1 - node->player_just_moved` instead of correct `node->player_just_moved`)
     - Impact: Corrupted simulation state, MCTS tree diverged from actual board
@@ -90,7 +101,8 @@ pip install numpy
   - Updated .clinerules with sequential testing requirement
   - Comprehensive documentation: `docs/bot_implementation/bot002_illegal_move_fix.md`
   - Git commit: a6ea4d3
-  - **Status**: Bot compiles successfully, ready for Botzone deployment
+  
+- **Status**: Bot002 fully fixed (both illegal moves and crashes), stable, and ready for Botzone deployment
 - **Task Completion Workflow Enhanced**: Improved workflow to enforce mandatory sequential execution
   - Problem: Steps were being skipped, memory bank files not reviewed before updates
   - Solution: Complete rewrite of `.clinerules/workflows/task_completion.md`

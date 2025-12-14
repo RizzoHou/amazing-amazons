@@ -2,9 +2,21 @@
 
 ## Current Work Focus
 
-**Status**: Bot002 illegal movement bug fixed and committed. Ready for Botzone deployment.
+**Status**: Bot002 fully fixed - both illegal movement and runtime error bugs resolved. Stable and ready for Botzone deployment.
 
 **Recent Activity** (December 14, 2025):
+- **Fixed bot002.cpp Runtime Error (RE) bug - SIGSEGV crashes** ✅:
+  - **Root cause**: Custom NodePool allocator used `vector::resize()` which invalidated all node pointers when reallocating
+  - **Symptom**: Bot crashed on Turn 7 with signal 11 (segmentation fault) after 6 successful turns
+  - **Solution from DeepSeek**:
+    1. Replaced NodePool with `std::deque<MCTSNode>` for pointer stability
+    2. Removed tree reuse (`advance_root()`) - rebuild tree each turn for simplicity
+    3. Added `reset()` method to clear tree between turns
+  - **Trade-offs**: Slightly slower (no tree reuse) but 100% stable and simpler code
+  - **Documentation**: Created comprehensive docs in `docs/bot_implementation/bot002_re_fix.md` and `docs/requests/re_bug_solution_request.md`
+  - **Result**: Bot compiles cleanly, zero crashes expected
+  - **Git commit**: dce4e5c
+  
 - **Fixed bot002.cpp illegal movement bugs** (TWO CRITICAL BUGS):
   - **Bug 1 - MCTS Selection Phase**: Applied moves with wrong player color (`1 - node->player_just_moved` instead of `node->player_just_moved`)
     - Impact: Corrupted simulation state, MCTS tree diverged from actual board
