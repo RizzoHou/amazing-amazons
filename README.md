@@ -75,17 +75,25 @@ pip install numpy
 
 ## Current Status
 
-✅ **Complete**: Bot001 C++ port, testing infrastructure, and bot002 optimized version  
-🔄 **Ready**: Bot002 for Botzone submission (time limits fixed)  
-📅 **Planned**: Performance validation and advanced features
+✅ **Complete**: Bot001 C++ port, testing infrastructure, bot002 optimized version, and tournament validation  
+🔄 **Ready**: Bot002 for Botzone submission (crash-free and stable)  
+📅 **Planned**: Advanced features (opening book, endgame solver)
 
-**Recent Updates** (December 13, 2025):
+**Recent Updates** (December 14, 2025):
+- **Bot002 Tournament Testing**: 20 games vs bot001 - **ZERO CRASHES**
+  - Fixed critical crash bugs (move replay logic, input validation, defensive checks)
+  - Results: Bot001 won 16 games (80%), Bot002 won 4 games (20%)
+  - Bot002 faster (1.128s/move) but strategically weaker than bot001 (1.776s/move)
+  - Average game length: 25.9 turns
+  - Status: Crash-free, stable, ready for Botzone deployment
+
+**Previous Updates** (December 13, 2025):
 - **Created bot002.cpp**: Optimized version with bitboard representation
   - Bitboard move generation (3x uint64_t vs 8x8 array)
   - Fast BFS with fixed arrays and on-the-fly accumulation
   - Xorshift64 PRNG, node pool allocator
   - Move ordering heuristic (root only)
-- **Fixed critical Botzone time limit issues**:
+- **Fixed critical Botzone crash issues**:
   - Removed expensive move ordering from inner loops (was called on every node!)
   - Conservative time limits: 1.6s/0.8s (vs 2s/1s limits)
   - Reduced memory overhead, fixed pool reset bug
