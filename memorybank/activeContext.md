@@ -2,21 +2,38 @@
 
 ## Current Work Focus
 
-**Status**: Memory bank workflow enhanced. Updated documentation to enforce reviewing all 6 core files during updates.
+**Status**: Task completion workflow enhanced to enforce mandatory sequential execution with memory bank file review.
 
 **Recent Activity** (December 14, 2025):
-- **Enhanced memory bank update workflow** to ensure ALL files are reviewed:
-  - Modified `.clinerules/memorybank.md` with mandatory "MANDATORY Update Workflow" section
-  - Added explicit flowchart showing Step 1: READ ALL FILES (MANDATORY) before any updates
-  - Created comprehensive "Required Reading Checklist" with all 6 core files
-  - Added "Why All Files Matter" section explaining importance of each file
-  - Updated `.clinerules/workflows/memory_bank_update.md` with matching requirements
-  - Added 4-phase process: Phase 1: READ EVERYTHING → Phase 2: ANALYZE → Phase 3: UPDATE → Phase 4: VERIFY
-  - Included explicit `read_file` commands for each file in special case section
-  - Strong emphasis: "DO NOT SKIP ANY FILES" and "DO NOT START UPDATING until you have read all 6 core files"
-  - **Problem solved**: Prevents tendency to only review activeContext.md and progress.md
-  - **Git commits**: Workflow documentation updates
-- **Executed the new workflow**: Read all 6 core memory bank files following new mandatory process
+- **Enhanced task completion workflow** (`.clinerules/workflows/task_completion.md`):
+  - **Problem identified**: Workflow steps were being skipped, memory bank files not being reviewed before updates
+  - **Solution implemented**: Complete rewrite with mandatory sequential execution
+  - Added prominent warning: "⚠️ CRITICAL: This workflow MUST be executed sequentially. DO NOT skip any steps."
+  - **Step 1 - Review ALL Memory Bank Files (MANDATORY - READ ONLY)**:
+    - Required reading checklist of all 6 core files before any updates
+    - "STOP HERE" instruction to prevent proceeding before completion
+    - Explanation of why each file matters
+  - **Step 2 - Update Memory Bank Files (ONE BY ONE)**:
+    - "ONLY AFTER completing Step 1" language
+    - Priority order: activeContext.md first, then progress.md, then others as needed
+    - Explicit instruction to update "ONE AT A TIME"
+    - Checkpoint before proceeding to Step 3
+  - **Step 3 - Update README.md**:
+    - "ONLY AFTER completing Step 2" language
+    - Must READ README.md first before updating
+    - Checkpoint before proceeding to Step 4
+  - **Step 4 - Clear Git Status (FINAL STEP)**:
+    - Sequential git commands with expected outputs
+    - Descriptive commit message guidelines
+    - Final verification of clean status
+  - **Added multiple safeguards**:
+    - "Critical Execution Rules" section with DO/DON'T lists
+    - Checkpoint markers after each step
+    - Final "Workflow Completion Checklist"
+    - Warning emojis and bold text throughout
+  - **Result**: Workflow now enforces exact sequence and prevents skipping steps
+  - **Git commit**: Pending (will be committed after memory bank and README updates)
+- **Executed the enhanced workflow**: Currently following Step 1 → Step 2 sequence with all 6 files reviewed
 
 **Previous Activity** (December 14, 2025):
 - **Fixed critical bug in bot002.cpp**: Resolved INVALIDMOVE errors on Botzone

@@ -137,7 +137,7 @@
   - All three workflows now cross-reference each other
   - Git commit: f9593b5
 
-- **Memory Bank Workflow Enhancement** ✓ (NEW - Dec 14, 2025)
+- **Memory Bank Workflow Enhancement** ✓ (Dec 14, 2025)
   - **Problem identified**: Cline was only reviewing activeContext.md and progress.md during memory bank updates
   - **Solution implemented**: Enhanced workflow to MANDATE reading all 6 core files
   - Updated `.clinerules/memorybank.md`:
@@ -155,6 +155,22 @@
       - Phase 4: VERIFY
     - Strong language: "DO NOT SKIP ANY FILES" and "DO NOT START UPDATING"
   - **Result**: Workflow now enforces comprehensive review preventing incomplete updates
+
+- **Task Completion Workflow Enhancement** ✓ (NEW - Dec 14, 2025)
+  - **Problem identified**: Task completion workflow steps were being skipped, memory bank files not reviewed before updates
+  - **Solution implemented**: Complete rewrite of `.clinerules/workflows/task_completion.md` with mandatory sequential execution
+  - **Key improvements**:
+    - Added prominent warning: "⚠️ CRITICAL: This workflow MUST be executed sequentially. DO NOT skip any steps."
+    - **Step 1**: Mandatory reading checklist of all 6 core files with "STOP HERE" instruction
+    - **Step 2**: Update memory bank files ONE BY ONE with priority order and checkpoints
+    - **Step 3**: Update README.md (read first, then update as needed)
+    - **Step 4**: Clear git status with sequential commands and verification
+    - Added "Critical Execution Rules" section with explicit DO/DON'T lists
+    - Added checkpoint markers after each step
+    - Added final "Workflow Completion Checklist" to track progress
+    - Used warning emojis and bold text for emphasis throughout
+  - **Result**: Workflow now enforces exact sequence (1 → 2 → 3 → 4) and prevents skipping steps
+  - **Git commit**: Pending (will be completed in this workflow execution)
 
 - **README.md Updated** ✓ (NEW - Jan 8, 2025)
   - Applied README update workflow to synchronize with current project state

@@ -80,6 +80,12 @@ pip install numpy
 📅 **Planned**: Advanced features (opening book, endgame solver)
 
 **Recent Updates** (December 14, 2025):
+- **Task Completion Workflow Enhanced**: Improved workflow to enforce mandatory sequential execution
+  - Problem: Steps were being skipped, memory bank files not reviewed before updates
+  - Solution: Complete rewrite of `.clinerules/workflows/task_completion.md`
+  - Added mandatory 4-step sequence: (1) Review ALL memory bank files → (2) Update files one by one → (3) Update README → (4) Clear git status
+  - Multiple safeguards: Warning messages, checkpoints, "STOP HERE" instructions, completion checklist
+  - Result: Workflow now prevents skipping steps and ensures thorough updates
 - **Bot002 Bug Fix**: Fixed illegal move issue reported from Botzone
   - Root cause: Color tracking error during game history replay caused board desynchronization
   - Fix: Corrected to always start with BLACK for first actual move, alternate only on actual moves
