@@ -680,8 +680,9 @@ int main() {
         my_color = WHITE;
     }
     
-    // Replay moves with proper color tracking
-    int current_color = (first_req[0] == -1) ? BLACK : WHITE;  // First move color
+    // Replay moves - Game always starts with BLACK, then alternates
+    // lines[] contains the full history, starting from turn 1
+    int current_color = BLACK;  // First actual move is always BLACK
     
     for (size_t i = 0; i < lines.size(); i++) {
         const string& line_str = lines[i];
@@ -690,9 +691,9 @@ int main() {
         int v;
         while (iss2 >> v) coords.push_back(v);
         
-        // Skip invalid moves
+        // Skip invalid moves (e.g., -1 -1 -1 -1 -1 -1)
         if (coords.size() < 6 || coords[0] == -1) {
-            current_color = 1 - current_color;  // Still alternate
+            // Don't alternate color for skipped moves
             continue;
         }
         
@@ -706,7 +707,7 @@ int main() {
         apply_move(board, m, current_color);
         ai.advance_root(m);
         
-        // Alternate for next move
+        // Alternate color for next actual move
         current_color = 1 - current_color;
     }
     
