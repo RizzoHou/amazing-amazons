@@ -52,7 +52,9 @@ amazing-amazons/
 ├── bots/                 # Bot implementations
 │   ├── bot001.py         # Python MCTS bot
 │   ├── bot001.cpp        # C++ port (4x faster)
-│   └── bot001_cpp        # Compiled C++ binary
+│   ├── bot001_cpp        # Compiled C++ binary
+│   ├── bot002.cpp        # Optimized C++ bot (bitboards)
+│   └── bot002_cpp        # Compiled optimized binary
 ├── scripts/              # Testing utilities
 │   ├── test_bot_simple.py      # Functionality tests
 │   ├── botzone_simulator.py   # Protocol simulator
