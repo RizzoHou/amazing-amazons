@@ -206,6 +206,14 @@ inline void apply_move(Board& board, const Move& move, int color) {
     uint64_t dest_bit = 1ULL << move.dest;
     uint64_t arrow_bit = 1ULL << move.arrow;
     
+    // Defensive: Verify source square contains a queen of the given color
+    #ifdef DEBUG
+    if ((board.queens[color] & src_bit) == 0) {
+        cerr << "ERROR: No queen at source position for color " << color << endl;
+        cerr << "Move: src=" << move.src << " dest=" << move.dest << " arrow=" << move.arrow << endl;
+    }
+    #endif
+    
     board.queens[color] ^= src_bit;   // Remove from source
     board.queens[color] |= dest_bit;  // Add to destination
     board.arrows |= arrow_bit;        // Place arrow
@@ -550,7 +558,7 @@ public:
             // Selection
             while (node->untried_moves.empty() && !node->children.empty()) {
                 node = node->uct_select_child(C);
-                apply_move(state, node->move, 1 - node->player_just_moved);
+                apply_move(state, node->move, node->player_just_moved);
                 current_player = 1 - current_player;
             }
             
@@ -680,9 +688,9 @@ int main() {
         my_color = WHITE;
     }
     
-    // Replay moves - Game always starts with BLACK, then alternates
-    // lines[] contains the full history, starting from turn 1
-    int current_color = BLACK;  // First actual move is always BLACK
+    // Replay moves - Only process response lines (odd indices)
+    // Botzone sends alternating request/response lines, where responses are the actual moves
+    int current_color = BLACK;  // First move is always by Black
     
     for (size_t i = 0; i < lines.size(); i++) {
         const string& line_str = lines[i];
@@ -691,11 +699,13 @@ int main() {
         int v;
         while (iss2 >> v) coords.push_back(v);
         
-        // Skip invalid moves (e.g., -1 -1 -1 -1 -1 -1)
-        if (coords.size() < 6 || coords[0] == -1) {
-            // Don't alternate color for skipped moves
+        // Skip incomplete lines or the initial "-1" request
+        if (coords.size() < 6 || coords[0] == -1)
             continue;
-        }
+        
+        // Only apply response lines (odd indices). Request lines (even indices) are duplicates.
+        if (i % 2 == 0)
+            continue;
         
         // Convert from (x,y) coordinates to bitboard indices
         int src_idx = coord_to_idx(coords[0], coords[1]);

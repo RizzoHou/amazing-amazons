@@ -9,3 +9,5 @@ Rules for development process and workflow best practices.
 - **Incremental Development**: Break large coding tasks into smaller components. Complete and test each component individually before proceeding to the next, ensuring each part is production-ready before moving forward.
 
 - **File Organization**: Maintain a clean and organized file hierarchy. Place files in appropriate directories according to their purpose and function within the project.
+
+- **Testing & Tournaments**: Run bot games sequentially, not in parallel, due to memory constraints on MacBook. Each bot instance can consume significant memory during MCTS simulations.
