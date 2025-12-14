@@ -2,9 +2,22 @@
 
 ## Current Work Focus
 
-**Status**: Task completion workflow enhanced to enforce mandatory sequential execution with memory bank file review.
+**Status**: Bot002 illegal movement bug fixed and committed. Ready for Botzone deployment.
 
 **Recent Activity** (December 14, 2025):
+- **Fixed bot002.cpp illegal movement bugs** (TWO CRITICAL BUGS):
+  - **Bug 1 - MCTS Selection Phase**: Applied moves with wrong player color (`1 - node->player_just_moved` instead of `node->player_just_moved`)
+    - Impact: Corrupted simulation state, MCTS tree diverged from actual board
+    - Fix: Changed to use correct player color in selection phase
+  - **Bug 2 - Replay Loop Duplicate Application**: Applied both request and response lines from Botzone
+    - Impact: Each move applied twice with alternating colors, corrupting bitboard state via XOR
+    - Fix: Only process odd-indexed lines (actual responses), skip even-indexed duplicates
+  - **Added defensive assertion**: DEBUG mode check in apply_move() to catch similar bugs early
+  - **Updated .clinerules**: Added sequential testing requirement due to memory constraints
+  - **Created comprehensive documentation**: `docs/bot_implementation/bot002_illegal_move_fix.md`
+  - **Git commit**: a6ea4d3
+  - **Status**: Bug fixed, compiled successfully, ready for Botzone deployment
+  
 - **Enhanced task completion workflow** (`.clinerules/workflows/task_completion.md`):
   - **Problem identified**: Workflow steps were being skipped, memory bank files not being reviewed before updates
   - **Solution implemented**: Complete rewrite with mandatory sequential execution

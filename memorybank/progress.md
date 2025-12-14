@@ -51,12 +51,23 @@
     - Bot001 won 16 games (80%), Bot002 won 4 games (20%)
     - Bot002 faster (1.128s/move) but weaker strategically than bot001 (1.776s/move)
     - Results: `results/bot002_vs_bot001_20251214_135450.json`
-  - **Bug Fix** (Dec 14, 2025): Fixed illegal move issue from Botzone
+  - **Bug Fix #1** (Dec 14, 2025): Fixed illegal move issue from Botzone
     - Root cause: Color tracking error during move replay caused board desynchronization
     - Fix: Corrected color tracking to always start with BLACK, alternate only on actual moves
     - Verified: 3 games in non-parallel mode, zero illegal moves
     - Git commit: 53cca24
-  - **Status**: Production-ready for Botzone deployment
+  - **Bug Fix #2** (Dec 14, 2025): Fixed TWO CRITICAL bugs causing illegal moves ✓
+    - **Bug 1 - MCTS Selection**: Wrong player color in selection phase (`1 - node->player_just_moved`)
+      - Impact: Corrupted simulation state, MCTS tree diverged from actual board
+      - Fix: Use correct player color (`node->player_just_moved`)
+    - **Bug 2 - Replay Loop**: Applied both request and response lines from Botzone
+      - Impact: Each move applied twice with alternating colors, corrupting bitboard via XOR
+      - Fix: Only process odd-indexed lines (responses), skip even-indexed duplicates
+    - **Added defensive assertion**: DEBUG mode check in apply_move() for early error detection
+    - **Updated .clinerules**: Added sequential testing requirement (memory constraints)
+    - **Documentation**: Created `docs/bot_implementation/bot002_illegal_move_fix.md`
+    - **Git commit**: a6ea4d3
+  - **Status**: Bug fixed, compiled successfully, READY for Botzone deployment
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated

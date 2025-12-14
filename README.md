@@ -80,18 +80,23 @@ pip install numpy
 📅 **Planned**: Advanced features (opening book, endgame solver)
 
 **Recent Updates** (December 14, 2025):
+- **Bot002 Critical Bug Fixes**: Fixed TWO major bugs causing illegal moves on Botzone ✅
+  - **Bug 1 - MCTS Selection Phase**: Wrong player color used (`1 - node->player_just_moved` instead of correct `node->player_just_moved`)
+    - Impact: Corrupted simulation state, MCTS tree diverged from actual board
+  - **Bug 2 - Replay Loop**: Applied both request and response lines from Botzone
+    - Impact: Each move applied twice with alternating colors, corrupting bitboard via XOR operations
+    - Fix: Only process odd-indexed lines (actual responses), skip even-indexed duplicates
+  - Added defensive assertion in DEBUG mode for early error detection
+  - Updated .clinerules with sequential testing requirement
+  - Comprehensive documentation: `docs/bot_implementation/bot002_illegal_move_fix.md`
+  - Git commit: a6ea4d3
+  - **Status**: Bot compiles successfully, ready for Botzone deployment
 - **Task Completion Workflow Enhanced**: Improved workflow to enforce mandatory sequential execution
   - Problem: Steps were being skipped, memory bank files not reviewed before updates
   - Solution: Complete rewrite of `.clinerules/workflows/task_completion.md`
   - Added mandatory 4-step sequence: (1) Review ALL memory bank files → (2) Update files one by one → (3) Update README → (4) Clear git status
   - Multiple safeguards: Warning messages, checkpoints, "STOP HERE" instructions, completion checklist
   - Result: Workflow now prevents skipping steps and ensures thorough updates
-- **Bot002 Bug Fix**: Fixed illegal move issue reported from Botzone
-  - Root cause: Color tracking error during game history replay caused board desynchronization
-  - Fix: Corrected to always start with BLACK for first actual move, alternate only on actual moves
-  - Verification: 3 tournament games in non-parallel mode - zero illegal moves, all games ended naturally
-  - Git commit: 53cca24
-  - Status: Production-ready for Botzone deployment
 - **Bot002 Tournament Testing**: 20 games vs bot001 - **ZERO CRASHES**
   - Fixed critical crash bugs (move replay logic, input validation, defensive checks)
   - Results: Bot001 won 16 games (80%), Bot002 won 4 games (20%)
