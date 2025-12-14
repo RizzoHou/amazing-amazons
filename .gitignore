@@ -27,6 +27,14 @@ results/
 logs/
 reports/
 
+# C++ compilation results
+*.o
+*.a
+*.exe
+*.out
+bots/bot*_cpp
+bots/*_cpp
+
 # IDE
 .vscode/
 .idea/
