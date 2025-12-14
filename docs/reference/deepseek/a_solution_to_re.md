@@ -1,3 +1,7 @@
+We replaced the custom `NodePool` with a `std::deque<MCTSNode>` to guarantee pointer stability and automatic destruction.  
+We removed the error‑prone `advance_root` and reset the tree before each search, eliminating the segmentation fault and memory leaks.
+
+```cpp
 // bot002.cpp - Optimized Amazons Bot with Bitboard Representation
 // Optimizations: Bitboards, Fast BFS, Move Ordering, Xorshift PRNG
 // Fixed: Replaced custom NodePool with std::deque to prevent pointer invalidation and memory leaks.
@@ -768,3 +772,4 @@ int main() {
     
     return 0;
 }
+```
