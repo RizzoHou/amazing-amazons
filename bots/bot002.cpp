@@ -609,10 +609,15 @@ public:
         if (root == nullptr) return;
         
         MCTSNode* new_root = nullptr;
-        for (size_t i = 0; i < root->children.size(); i++) {
-            if (root->children[i]->move == move) {
-                new_root = root->children[i];
-                break;
+        
+        // Defensive: Check children vector is valid
+        if (!root->children.empty()) {
+            for (size_t i = 0; i < root->children.size(); i++) {
+                // Defensive: Null check each child
+                if (root->children[i] != nullptr && root->children[i]->move == move) {
+                    new_root = root->children[i];
+                    break;
+                }
             }
         }
         
@@ -675,14 +680,21 @@ int main() {
         my_color = WHITE;
     }
     
-    // Replay moves
-    for (const string& line_str : lines) {
+    // Replay moves with proper color tracking
+    int current_color = (first_req[0] == -1) ? BLACK : WHITE;  // First move color
+    
+    for (size_t i = 0; i < lines.size(); i++) {
+        const string& line_str = lines[i];
         istringstream iss2(line_str);
         vector<int> coords;
         int v;
         while (iss2 >> v) coords.push_back(v);
         
-        if (coords[0] == -1) continue;
+        // Skip invalid moves
+        if (coords.size() < 6 || coords[0] == -1) {
+            current_color = 1 - current_color;  // Still alternate
+            continue;
+        }
         
         // Convert from (x,y) coordinates to bitboard indices
         int src_idx = coord_to_idx(coords[0], coords[1]);
@@ -690,19 +702,12 @@ int main() {
         int arrow_idx = coord_to_idx(coords[4], coords[5]);
         Move m(src_idx, dest_idx, arrow_idx);
         
-        // Apply move
-        int color = (lines[0] == line_str) ? (first_req[0] == -1 ? BLACK : WHITE) : (1 - my_color);
-        if (&line_str == &lines[0]) {
-            // First move determines initial player
-            color = (first_req[0] == -1) ? BLACK : WHITE;
-        } else {
-            // Alternate colors
-            int move_num = &line_str - &lines[0];
-            color = (move_num % 2 == 0) ? my_color : (1 - my_color);
-        }
-        
-        apply_move(board, m, color);
+        // Apply move with current color
+        apply_move(board, m, current_color);
         ai.advance_root(m);
+        
+        // Alternate for next move
+        current_color = 1 - current_color;
     }
     
     // Set turn number
@@ -746,12 +751,23 @@ int main() {
                 while (iss >> v) parts.push_back(v);
                 
                 if (parts.size() == 6) {
-                    int src_idx = coord_to_idx(parts[0], parts[1]);
-                    int dest_idx = coord_to_idx(parts[2], parts[3]);
-                    int arrow_idx = coord_to_idx(parts[4], parts[5]);
-                    opponent_move = Move(src_idx, dest_idx, arrow_idx);
-                    found = true;
-                    break;
+                    // Validate coordinates are in bounds
+                    bool valid = true;
+                    for (int coord : parts) {
+                        if (coord < 0 || coord >= 8) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    
+                    if (valid) {
+                        int src_idx = coord_to_idx(parts[0], parts[1]);
+                        int dest_idx = coord_to_idx(parts[2], parts[3]);
+                        int arrow_idx = coord_to_idx(parts[4], parts[5]);
+                        opponent_move = Move(src_idx, dest_idx, arrow_idx);
+                        found = true;
+                        break;
+                    }
                 } else if (parts.size() == 1) {
                     continue;
                 } else {

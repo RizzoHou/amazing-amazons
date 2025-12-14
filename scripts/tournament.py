@@ -189,6 +189,8 @@ def run_tournament(bot1_cmd, bot2_cmd, num_games, parallel_games, output_file):
     print(f"Games: {num_games}")
     print(f"Parallel: {parallel_games}")
     print("=" * 60)
+    print(f"Starting {num_games} games with {parallel_games} parallel workers...")
+    print()
     
     # Prepare game tasks (alternate colors)
     tasks = []

@@ -47,7 +47,11 @@
     - Fixed pool reset bug that destroyed kept tree
     - Conservative time limits: 1.6s/0.8s (vs 2s/1s Botzone limits)
   - Compilation: `g++ -O3 -march=native -flto -std=c++11 -o bots/bot002_cpp bots/bot002.cpp`
-  - **Status**: Ready for Botzone, should stay within time limits
+  - **Tournament Testing** (Dec 14, 2025): 20 games vs bot001_cpp - **ZERO CRASHES**
+    - Bot001 won 16 games (80%), Bot002 won 4 games (20%)
+    - Bot002 faster (1.128s/move) but weaker strategically than bot001 (1.776s/move)
+    - Results: `results/bot002_vs_bot001_20251214_135450.json`
+  - **Status**: Crash-free and stable, ready for Botzone deployment
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated

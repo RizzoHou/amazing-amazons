@@ -22,6 +22,14 @@
 - **Compilation**: `g++ -O3 -march=native -flto -std=c++11 -o bots/bot002_cpp bots/bot002.cpp`
 - **Testing**: Bot002 runs correctly, respects time limits
 - **Ready for Botzone**: Fixed version should stay within time limits
+- **Tournament Testing** (December 14, 2025):
+  - Ran 20-game tournament: bot002_cpp vs bot001_cpp (sequential mode)
+  - **ZERO CRASHES** - All critical fixes successful!
+  - Results: Bot001 (bot001_cpp) won 16 games (80%), Bot002 won 4 games (20%)
+  - Average game length: 25.9 turns
+  - Average time: Bot002 1.128s/move, Bot001 1.776s/move
+  - Bot002 is faster but weaker strategically (needs algorithm improvements)
+  - File: `results/bot002_vs_bot001_20251214_135450.json`
 
 **Previous Activity** (November 12, 2025):
 - Enhanced workflow documentation system with three comprehensive workflows
