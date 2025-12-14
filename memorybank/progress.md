@@ -51,7 +51,12 @@
     - Bot001 won 16 games (80%), Bot002 won 4 games (20%)
     - Bot002 faster (1.128s/move) but weaker strategically than bot001 (1.776s/move)
     - Results: `results/bot002_vs_bot001_20251214_135450.json`
-  - **Status**: Crash-free and stable, ready for Botzone deployment
+  - **Bug Fix** (Dec 14, 2025): Fixed illegal move issue from Botzone
+    - Root cause: Color tracking error during move replay caused board desynchronization
+    - Fix: Corrected color tracking to always start with BLACK, alternate only on actual moves
+    - Verified: 3 games in non-parallel mode, zero illegal moves
+    - Git commit: 53cca24
+  - **Status**: Production-ready for Botzone deployment
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated

@@ -2,9 +2,20 @@
 
 ## Current Work Focus
 
-**Status**: Bot002 created with optimized bitboard implementation. Fixed critical time limit issues from Botzone deployment.
+**Status**: Bot002 bug fix completed. Fixed illegal move issue caused by color tracking error in move replay.
 
-**Recent Activity** (December 13, 2025):
+**Recent Activity** (December 14, 2025):
+- **Fixed critical bug in bot002.cpp**: Resolved INVALIDMOVE errors on Botzone
+  - **Root cause**: Color tracking logic during game history replay was incorrect
+  - Moves were being applied to wrong player's queens, causing board state desynchronization
+  - Bot would try to move queens from positions where they no longer existed
+  - **Fix**: Changed color tracking to always start with BLACK for first actual move, properly alternate only on actual moves (not -1 entries)
+  - **Testing**: Verified with 3 tournament games in non-parallel mode - zero illegal moves or errors
+  - All games ended naturally (average 26.3 turns)
+  - **Git commit**: 53cca24
+- **Status**: Bot002 now ready for Botzone deployment with bug fix applied
+
+**Previous Activity** (December 13, 2025):
 - **Created bot002.cpp**: Optimized version based on DeepSeek's optimization plan
   - Implemented bitboard representation (3x uint64_t vs 8x8 array)
   - Optimized move generation with bitwise operations

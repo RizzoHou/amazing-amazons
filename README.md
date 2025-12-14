@@ -80,12 +80,17 @@ pip install numpy
 📅 **Planned**: Advanced features (opening book, endgame solver)
 
 **Recent Updates** (December 14, 2025):
+- **Bot002 Bug Fix**: Fixed illegal move issue reported from Botzone
+  - Root cause: Color tracking error during game history replay caused board desynchronization
+  - Fix: Corrected to always start with BLACK for first actual move, alternate only on actual moves
+  - Verification: 3 tournament games in non-parallel mode - zero illegal moves, all games ended naturally
+  - Git commit: 53cca24
+  - Status: Production-ready for Botzone deployment
 - **Bot002 Tournament Testing**: 20 games vs bot001 - **ZERO CRASHES**
   - Fixed critical crash bugs (move replay logic, input validation, defensive checks)
   - Results: Bot001 won 16 games (80%), Bot002 won 4 games (20%)
   - Bot002 faster (1.128s/move) but strategically weaker than bot001 (1.776s/move)
   - Average game length: 25.9 turns
-  - Status: Crash-free, stable, ready for Botzone deployment
 
 **Previous Updates** (December 13, 2025):
 - **Created bot002.cpp**: Optimized version with bitboard representation
