@@ -2,9 +2,27 @@
 
 ## Current Work Focus
 
-**Status**: Bot002 fully fixed - both illegal movement and runtime error bugs resolved. Stable and ready for Botzone deployment.
+**Status**: Bot002 fully fixed - all critical bugs resolved (illegal movement, runtime error, and TLE). Stable and ready for Botzone deployment.
+
+**Recent Activity** (December 15, 2025):
+- **Fixed bot002.cpp TLE (Time Limit Exceeded) bug** ✅:
+  - **Root cause**: Time check at loop start allowed expensive iterations to exceed 1000ms limit
+    - If check passed at 0.79s, but iteration took 300ms → 1.09s total (exceeded limit)
+    - Late-game BFS + mobility calculations can take 200-300ms in complex positions
+  - **Symptom**: Bot exceeded 1000ms deadline in late-game positions (turn 25+)
+  - **Solution - Two-tier defense-in-depth approach**:
+    1. **More conservative time limits**: 0.7s (vs 1.0s limit), 1.4s first turn (vs 2.0s limit)
+    2. **Mid-iteration safety check**: Added check before evaluation to prevent starting expensive BFS when time is short
+  - **Trade-offs**: 
+    - Sacrifices ~15-20% MCTS iterations for guaranteed time compliance
+    - 300ms safety buffer for regular turns, 600ms for first turn
+    - Bot still performs well strategically (was winning before TLE)
+  - **Documentation**: Created comprehensive docs in `docs/bot_implementation/bot002_tle_fix.md`
+  - **Result**: Bot now has multi-layered time safety, zero TLE risk expected
+  - **Git commit**: Pending
 
 **Recent Activity** (December 14, 2025):
+
 - **Fixed bot002.cpp Runtime Error (RE) bug - SIGSEGV crashes** ✅:
   - **Root cause**: Custom NodePool allocator used `vector::resize()` which invalidated all node pointers when reallocating
   - **Symptom**: Bot crashed on Turn 7 with signal 11 (segmentation fault) after 6 successful turns

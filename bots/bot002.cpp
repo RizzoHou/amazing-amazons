@@ -551,6 +551,11 @@ public:
                 node = new_node;
             }
             
+            // Safety check: Don't start expensive evaluation if too close to time limit
+            current_time = chrono::steady_clock::now();
+            elapsed = chrono::duration<double>(current_time - start_time).count();
+            if (elapsed >= time_limit - 0.15) break;  // Reserve 150ms for evaluation + final move selection
+            
             // Evaluation
             double win_prob = evaluate_position(state, root_player, turn_number);
             
@@ -588,8 +593,8 @@ public:
 
 // --- MAIN I/O ---
 
-const double TIME_LIMIT = 0.8;  // Conservative: 0.8s (vs 1s limit)
-const double FIRST_TURN_TIME_LIMIT = 1.6;  // Conservative: 1.6s (vs 2s limit)
+const double TIME_LIMIT = 0.7;  // Conservative: 0.7s (vs 1s limit) - 300ms safety buffer
+const double FIRST_TURN_TIME_LIMIT = 1.4;  // Conservative: 1.4s (vs 2s limit) - 600ms safety buffer
 
 int main() {
     ios::sync_with_stdio(false);
