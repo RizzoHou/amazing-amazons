@@ -2,10 +2,32 @@
 
 ## Current Work Focus
 
-**Status**: Bot002 fully fixed - all critical bugs resolved (illegal movement, runtime error, and TLE). Stable and ready for Botzone deployment.
+**Status**: Bot002 experiencing persistent TLE despite fixes. Created comprehensive request document for DeepSeek consultation.
 
 **Recent Activity** (December 15, 2025):
-- **Fixed bot002.cpp TLE (Time Limit Exceeded) bug** ✅:
+- **Created TLE bug solution request document for DeepSeek** ✅:
+  - **Document**: `docs/requests/tle_bug_solution_request.md`
+  - **Context**: Bot002 still gets TLE on Botzone despite previous fix attempts
+  - **Analysis included**:
+    - Timing progression from both logs (original + new still_tle.json)
+    - Bot reaches 951ms → 1000ms TLE despite 700ms limit + 150ms safety buffer
+    - Late-game 3-5x slowdown (200ms → 600ms → 1000ms)
+    - First turn anomaly: 933ms despite 1400ms limit
+  - **Previous fix attempts documented**:
+    - Fix #1: Conservative time limits (0.7s/1.4s) - Failed
+    - Fix #2: Mid-iteration safety check - Insufficient
+  - **Key observations**:
+    - ~300-450ms unaccounted time somewhere
+    - Time limits appear not to be working as intended
+    - Consistent pattern across both TLE logs
+  - **Questions prepared for DeepSeek**:
+    - 8 diagnostic questions covering timing, overhead, evaluation costs
+    - Solution direction questions about adaptive time management
+    - BFS optimization possibilities
+  - **Status**: Request document ready, will be provided to DeepSeek with source code and logs
+  - **Git commit**: Pending
+  
+- **Previous TLE fix attempt** (December 15, 2025) - INSUFFICIENT:
   - **Root cause**: Time check at loop start allowed expensive iterations to exceed 1000ms limit
     - If check passed at 0.79s, but iteration took 300ms → 1.09s total (exceeded limit)
     - Late-game BFS + mobility calculations can take 200-300ms in complex positions

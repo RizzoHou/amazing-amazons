@@ -76,10 +76,19 @@ pip install numpy
 ## Current Status
 
 ✅ **Complete**: Bot001 C++ port, testing infrastructure, bot002 optimized version, and tournament validation  
-🔄 **Ready**: Bot002 for Botzone submission (crash-free and stable)  
+⚠️ **Blocked**: Bot002 has persistent TLE (Time Limit Exceeded) issue, awaiting expert consultation  
 📅 **Planned**: Advanced features (opening book, endgame solver)
 
-**Recent Updates** (December 14, 2025):
+**Recent Updates** (December 15, 2025):
+- **Bot002 TLE Request Document Created**: Comprehensive bug solution request for DeepSeek ✅
+  - **Problem**: Bot002 still experiences TLE despite previous fixes (0.7s/1.4s limits + mid-iteration check)
+  - **Symptom**: Bot reaches 951ms → 1000ms TLE in late-game despite 700ms limit + 150ms safety buffer
+  - **Analysis**: ~300-450ms unaccounted time, late-game 3-5x slowdown, first turn anomaly
+  - **Document**: `docs/requests/tle_bug_solution_request.md` with comprehensive timing analysis
+  - **Questions**: 8 diagnostic questions for DeepSeek covering timing, overhead, and optimization
+  - **Status**: Request document ready, will be provided with source code and logs to DeepSeek
+
+**Previous Updates** (December 14, 2025):
 - **Bot002 Runtime Error (RE) Fix**: Fixed SIGSEGV segmentation fault crashes ✅
   - **Root Cause**: Custom NodePool allocator used `vector::resize()` which invalidated all node pointers when reallocating memory
   - **Symptom**: Bot crashed on Turn 7 with signal 11 after 6 successful turns

@@ -82,7 +82,22 @@
       - `docs/reference/deepseek/a_solution_to_re.md` - DeepSeek's solution
     - **Result**: Bot compiles cleanly, zero crashes expected
     - **Git commit**: dce4e5c
-  - **Status**: All bugs fixed, fully stable, READY for Botzone deployment
+  
+  - **TLE Issue - Requires Expert Consultation** (Dec 15, 2025): ⚠️
+    - **Problem**: Bot002 still experiences TLE despite previous fixes (0.7s/1.4s limits + mid-iteration check)
+    - **Symptom**: Bot reaches 951ms → 1000ms TLE in late-game despite 700ms limit + 150ms safety buffer
+    - **Analysis**: 
+      - ~300-450ms unaccounted time somewhere in execution
+      - Late-game 3-5x slowdown (200ms → 600ms → 1000ms)
+      - First turn anomaly: 933ms despite 1400ms limit
+    - **Request Document Created**: `docs/requests/tle_bug_solution_request.md`
+      - Comprehensive timing analysis from both TLE logs
+      - Documentation of previous fix attempts and why they failed
+      - 8 diagnostic questions for DeepSeek
+      - Solution direction questions (adaptive time management, BFS optimization)
+    - **Status**: Awaiting DeepSeek consultation with source code and logs
+    - **Git commit**: Pending
+  - **Overall Status**: Bot002 stable (no crashes, no illegal moves), but TLE issue blocks Botzone deployment
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated
