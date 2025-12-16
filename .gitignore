@@ -51,3 +51,6 @@ bots/*_cpp
 *.tmp
 *.bak
 .cache/
+
+# exported files
+export/
