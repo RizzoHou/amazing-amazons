@@ -1,0 +1,472 @@
+<languages/>
+
+== What is a bot ==
+
+Bot is a program submitted by users on [[Special:MyLanguage/Botzone|Botzone]]. It has certain artificial intelligence and can fight against other bots or [[Special:MyLanguage/人类玩家|human players]] according to the existing [[Special:MyLanguage/游戏|game]] rules.
+
+
+== Runtime Environment ==
+
+The evaluation machines in Botzone are all virtual machines running the x86-64 architecture of Ubuntu 16.04, and only one CPU core is available.
+
+Currently the platform can run multi-threaded programs, but because they are run in a single-core environment, there is no performance benefit.
+
+Bots can read and write files in the user's storage space. For details, please click on the menu on Botzone and choose "Manage Storage".
+
+
+== Language Supported ==
+
+Bots can be written in the following languages:
+*C/C++ (The online compiler will define the macro '''<code>_BOTZONE_ONLINE</code>''' )
+*Java
+*JavaScript
+*C# (Mono)
+*python2
+*python3
+*Pascal
+
+
+=== Tips for uploading multiple files in Python ===
+
+Please refer to the following links:
+
+[http://blog.ablepear.com/2012/10/bundling-python-files-into-stand-alone.html http://blog.ablepear.com/2012/10/bundling-python-files-into-stand-alone.html]
+
+(If inaccessible, please refer to [[Special:MyLanguage/BundleMultiPython|BundleMultiPython]])
+
+To put it simple, pack the python files into zip format, and include an extra <code>__main__.py</code> in the root directory as an entry. Then upload the whole zip file as the python code.
+
+'''Note''': Please do not pack the data files, but upload them using the "Manage Storage" feature in the menu, and then use the 'data' path to access them in the program.
+
+=== Tips for uploading multiple files in C++ ===
+
+
+Please use this tool: [https://github.com/vinniefalco/Amalgamate https://github.com/vinniefalco/Amalgamate].
+
+This tool will merge several C ++ source code files into one file.
+
+== Runtime Libraries Provided ==
+
+*C/C++: supports [[Special:MyLanguage/JSONCPP|JSONCPP]] (<code>#include "jsoncpp/json.h"</code>), [https://github.com/nlohmann/json nlohmann/json] (<code>#include "nlohmann/json.hpp"</code>) and [http://eigen.tuxfamily.org/index.php?title=Main_Page Eigen] (<code>#include "Eigen/xx"</code>)
+** The compiler "with many libraries" supports tensorflow_cc, libtorch, libboost and libopenblas. But if this compiler is chosen, the JSONCPP library will be the latest, which differs from that provided by Botzone.
+*Java: supports [[Special:MyLanguage/JSON.simple|JSON.simple]]
+*C#: supports [http://www.newtonsoft.com/json Newtonsoft.Json]
+*python(2/3): both support numpy, scipy, TensorFlow under CPU, theano, pytorch (0.4.0, except python 3.6) and mxnet (0.12.0), as well as keras (2.1.6), lasagne, scikit-image and h5py.
+**python 3.6 does not support theano and lasagne.
+**The pytorch version under python 3.6 is 1.4.0.
+**The mxnet version under python 3.6 is 1.4.0.
+
+'''If there is a need to update or add libraries, please post to the discussion board to remind the administrator.'''
+
+== Interaction ==
+
+Each life cycle contains only one input and one output, '''as is shown in the picture on the right'''. Each input contains the whole history of interactions between the bot and the platform. The IO protocol can be '''Interaction by [[Special:MyLanguage/JSON|JSON]]''' or '''Simple Interaction'''.
+
+[[File:BotRunMode_Traditional.png|right]]
+
+'''Update:''' "Keep Running" mode is available now. You can keep the bot running by outputing certain commands, to reduce the overhead of a cold start. Details are in [[#长时运行|#Keep Running]].
+
+Thus, the running process of the bot should be:
+*program starts
+*get the previous interactions and the latest input from the platform
+*calculate based on the obtained interactions (requests + responses)
+**restore the state to the latest one according to the previous input (requests) and output (responses)
+**give the decision according to the latest input (request)
+*print the result and save useful information
+*program ends
+
+
+=== Resource and Time Limit ===
+
+Unless specified, the platform requires that the program be completed within '''1 second''' of each run and use memory no more than '''256 MB'''.
+
+In each game, the time limit for the first turn of each bot is doubled.
+
+Under [[#长时运行|#Keep Running]] mode, see the page for submitting your bot for the time limit for turns other than the first turn.
+
+Due to the different operating efficiency of different languages, we also have different adjustments to the time limit of different languages.
+*C/C++: unchanged
+*Java: tripled
+*C#: sixfold
+*JavaScript: doubled
+*python: sixfold
+*Pascal: unchanged
+
+
+=== IO Protocol ===
+
+To accommodate beginners, there are two forms of interaction: Interaction by [[Special:MyLanguage/JSON|JSON]] and Simple Interaction.
+
+Tip: To limit the size of the match log, the fields of data and globaldata are used as intermediate variables in the match and will not be stored in the log after the match.
+
+If you want to debug, use the debug field, which remains in the log after the game is over.
+
+
+=== Interaction by [[Special:MyLanguage/JSON|JSON]] ===
+
+To use this interaction, you may need to add json-processing libraries to your own program, as described in the sample program below.
+
+
+==== '''Input to Bot''' ====
+
+In fact, the input of the bot is single-lined compact JSON.
+<syntaxhighlight lang="javascript">
+ {
+ 	"requests" : [
+ 		"Judge request in Turn 1", // The information (request) obtained by the bot in the first turn, detailed format depending on the game
+ 		"Judge request in Turn 2", // The information (request) obtained by the bot in the second turn, detailed format depending on the game
+ 		...
+ 	],
+ 	"responses" : [
+ 		"Bot response in Turn 1", // The output (response) from the bot in the first turn, detailed format depending on the game
+ 		"Bot response in Turn 2", // The output (response) from the bot in the second turn, detailed format depending on the game
+ 		...
+ 	],
+ 	"data" : "saved data", // Data saved by the bot in the last turn, with a maximum size of 100 KB [note it will not be kept in the log]
+ 	"globaldata" : "globally saved data", // Data saved globally by the bot from last game, with a maximum size of 100 KB [note it will not be kept in the log]
+ 	"time_limit" : "", // The time limit
+ 	"memory_limit" : "" // The memory limit
+ }
+</syntaxhighlight>
+
+
+==== '''Output Required From the Bot''' ====
+
+The bot should give single-lined compact JSON.
+<syntaxhighlight lang="javascript">
+ {
+ 	"response" : "response msg", // The output (response) from the bot
+ 	"debug" : "debug info", // Debug information, which will be written to the log, with a maximum size of 1 KB
+ 	"data" : "saved data" // Data saved by the bot in this turn, which will be given to the bot in the next turn [note it will not be kept in the log]
+ 	"globaldata" : "globally saved data" // Global data saved by the bot, which will not only be given to the bot in the next turn but also be kept for futurn games if this is the last turn [note it will not be kept in the log]
+ }
+</syntaxhighlight>
+
+
+=== Simple Interaction ===
+
+To use this interaction, you only need to use the standard input/output by line.
+
+
+==== '''Input to Bot''' ====
+
+# Your bot will first read a line with only one number '''n''', indicating that this is the nth turn (starting at 1).
+# Then, there are 2 * n - 1 messages, which are composed of input (request) obtained from the platform by the bot and output (response) by the bot for each previous turn.
+#* To count from 1, (1 <= i < n)
+#** message 2 * i - 1 is '''the input (request) to the bot from the platform''' in the ith turn, n - 1 messages in total
+#** message 2 * i is '''the output (response) from the bot''' in the ith turn, n - 1 messages in total
+#** The last message, i.e. message 2 * n - 1, is '''the new input (request) to the bot from the platform'''.
+#* Each message may contain one or more lines, with a detailed format depending on the game.
+#* Your bot needs to derive the current game state and give the best decision based on the above information.
+# Then your bot will get '''data''' in '''one line''', which is the data saved by your bot in the previous turn, with a maximum length of 100KB [note it will not be kept in the log].
+# Then your bot will get '''globaldata''' in '''one or more lines''', which is the global data saved by your bot in the last turn or the last game, with a maximum length of 100KB [note it will not be kept in the log].
+#* You can consider as globaldata everything after the data line until the end of the file.
+
+
+==== '''Sample Input''' ====
+
+ <nowiki>
+3
+game information (request) in the first turn, i.e. the input to the bot
+the output (response) from the bot in the first turn
+game information in the second turn
+the output from the bot in the second turn
+game information in the third turn
+Bot saved this as data in the last turn!
+Bot saved this as globaldata in the last run!
+</nowiki>
+
+
+==== '''Output Required From the Bot''' ====
+
+Your bot should output four parts of data, seperated by line breaks.
+
+# First is the decision made by your bot in this turn, please output according to the requirements of the game. It must take only one row.
+# Next comes debug, '''one line''' of message for debugging in the replay, with a maximum size of 100 KB [Note it will not be kept in the log].
+# Next comes data,  '''one line''' of message saved by the bot in this turn, which will be given to the bot in the next turn, with a maximum size of 100 KB [Note it will not be kept in the log].
+# Next comes globaldata, '''one or more lines''' of global message saved by the bot, which will be given to the bot in the next turn and be kept after this game, with a maximum size of 100 KB [Note it will not be kept in the log].
+
+
+==== '''Sample Output''' ====
+
+ <nowiki>
+Output of the bot in this turn
+Bot saved this as debug, to be used when replaying!
+Bot saved this as data, to be used in the next turn!
+Bot saved this as globaldata in this run, for futurn use!</nowiki>
+
+
+===Sample program with [[Special:MyLanguage/JSON|JSON]] Interaction===
+
+The following are the sample programs with JSON interaction in C++, C#, Java, Python and JavaScript:
+
+'''C++'''
+
+To see how it can be compiled natively, see [[Special:MyLanguage/JSONCPP|JSONCPP]].
+
+<syntaxhighlight lang="cpp">
+ #include <iostream>
+ #include <string>
+ #include <sstream>
+ #include "jsoncpp/json.h" // This library is included by default when compiled in C++
+ using namespace std;
+ 
+ int main()
+ {
+ 	// read the JSON
+ 	string str;
+ 	getline(cin, str);
+ 	Json::Reader reader;
+ 	Json::Value input;
+ 	reader.parse(str, input);
+ 
+ 	// analyze the input and output in the history and restore current game state
+ 	string data = input["data"].asString(); // data saved by the bot in the last turn of this game
+ 	int turnID = input["responses"].size();
+ 	for (int i = 0; i < turnID; i++)
+ 	{
+ 		istringstream in(input["requests"][i].asString()),
+ 			out(input["responses"][i].asString());
+ 
+ 		// Restore the game state to this turn according to these input and output
+ 	}
+ 
+ 	// Here is the input of this turn
+ 	istringstream in(input["requests"][turnID].asString());
+ 
+ 	// Make the decision and save it in myAction
+ 
+ 	// output the JSON
+ 	Json::Value ret;
+ 	ret["response"] = myAction;
+ 	ret["data"] = myData; // data to be saved in this turn, which can be used in the next turn
+ 	Json::FastWriter writer;
+ 	cout << writer.write(ret) << endl;
+ 	return 0;
+ }
+</syntaxhighlight>
+
+'''C#'''
+
+To see how it can be compiled natively, see [http://www.newtonsoft.com/json Newtonsoft.Json].
+
+<syntaxhighlight lang="csharp">
+using System;
+using Newtonsoft.Json;
+
+struct InputData
+{
+	public dynamic[] // Please decide the types according to the specific game
+		requests, // the collection of input from the platform in history
+		responses; // the collection of output by this bot in history
+	public string
+		data, // data saved by this bot in the last turn of this game
+		globaldata; // global data saved by this bot in the last run (maybe in the last game)
+	public int time_limit, memory_limit;
+}
+
+struct OutputData
+{
+	public dynamic response; // Output in this turn
+	public string
+		debug, // debug message, which will be kept in log
+		data, // data to be saved in this turn, which will be given to the bot in the next turn
+		globaldata; // global data to be saved, which will be given to the bot in the next turn, and be kept after this game is over
+}
+
+class Program
+{
+	static void Main(string[] args) // Please ensure that only one class defined the method Main in this file
+	{
+		// parse the input into struct
+		var input = JsonConvert.DeserializeObject<InputData>(
+			Console.ReadLine()
+		);
+
+		// analyze the input and output in the history and restore current game state
+		int turnID = input.responses.Length;
+		for (int i = 0; i < turnID; i++)
+		{
+			dynamic inputOfThatTurn = input.requests[i], // input of that turn
+ 				outputOfThatTurn = input.responses[i]; // output of that turn
+
+			// Restore the game state to this turn according to these input and output
+		}
+
+		// Here is the input of this turn
+		dynamic inputOfCurrentTurn = input.requests[turnID];
+
+		// Make the decision and save it in myAction
+
+		// output the JSON
+		OutputData output = new OutputData();
+		output.response = myAction;
+		output.debug = "hhh";
+		Console.WriteLine(
+			JsonConvert.SerializeObject(output)
+		);
+	}
+}
+</syntaxhighlight>
+
+'''JavaScript'''
+
+<syntaxhighlight lang="javascript">
+// Initialize the standard input
+var readline = require('readline');
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
+
+var rl = readline.createInterface({
+	input: process.stdin
+});
+  
+rl.on('line', function (line) {
+	// parse the json
+	var input = JSON.parse(line);
+	var data = input.data; // data saved by the bot in the last turn of this game
+
+	// analyze the input and output in the history and restore current game state
+	for (var i = 0; i < input.responses.length; i++) {
+		var myInput = input.requests[i], myOutput = input.responses[i];
+		// Restore the game state to this turn according to these input and output
+	}
+
+	// Here is the input of this turn
+	var currInput = input.requests[input.requests.length - 1];
+
+	var myAction = {}, myData = {};
+
+	// Make the decision and output the json
+	process.stdout.write(JSON.stringify({
+		response: myAction,
+		data: myData // data to be saved in this turn, which can be used in the next turn
+	}));
+
+	// exit the program
+	process.exit(0);
+});
+</syntaxhighlight>
+
+'''Python'''
+
+Sample for only Python 3 is provided.
+
+<syntaxhighlight lang="python">
+import json
+
+# parse the json
+full_input = json.loads(input())
+if "data" in full_input:
+    my_data = full_input["data"]; # data saved by the bot in the last turn of this game
+else:
+    my_data = None
+
+# analyze the input and output in the history and restore current game state
+all_requests = full_input["requests"]
+all_responses = full_input["responses"]
+for i in range(len(all_responses)):
+    myInput = all_requests[i] # input of ith turn
+    myOutput = all_responses[i] # output of ith turn
+    # TODO: Restore the game state to this turn according to these input and output
+    pass
+
+# Here is the input of this turn
+curr_input = all_requests[-1]
+
+# TODO: Make the decision
+my_action = { "x": 1, "y": 1 }
+
+print(json.dumps({
+    "response": my_action,
+    "data": my_data # data to be saved in this turn, either dict or string, which can be used in the next turn
+}))
+</syntaxhighlight>
+
+'''Java'''
+
+To see how it can be compiled natively, see [[Special:MyLanguage/JSON.simple|JSON.simple]].
+
+<syntaxhighlight lang="java">
+import java.util.*;
+import org.json.simple.JSONValue; // included in Java library
+
+class Main { // Please NOTE: The name of this class ""must"" be Main, and no package statement is included. But the name of this file can be arbitrary.
+	static class SomeClass {
+		// To define new classes, please use static inner class
+	}
+	public static void main(String[] args) {
+		String input = new Scanner(System.in).nextLine();
+		Map<String, List> inputJSON = (Map) JSONValue.parse(input);
+		// The following TYPEs are the types of single response/request, and are likely to be Map<String,
+ Long> or String
+		List<TYPE> requests = inputJSON.get("requests");
+		List<TYPE> responses = inputJSON.get("responses");
+		for (TYPE rec : requests) {
+			// do something
+		}
+		for (TYPE rec : responses) {
+			// do something else
+		}
+		// Calculate an output here, note that its type is also TYPE
+		Map<String, TYPE> outputJSON = new HashMap();
+		outputJSON.put("response", output);
+		System.out.print(JSONValue.toJSONString(outputJSON));
+	}
+}
+</syntaxhighlight>
+
+
+<span id="长时运行"></span>
+
+==Keep Running==
+
+If you want to avoid the extra overhead of restarting your bot each time (such as the initialization of the neural network) by not having it to exit after each turn, you can choose this mode of interaction. Please '''refer to the figure on the right'''.
+
+[[File:BotRunMode_LongRunning.png|right]]
+
+This mode is still under test, so please pay attention that there may be unexpected problems. If you encounter some problems, please contact the administrator or post in the discussion board. Thank you for your support!
+
+
+===To enable this mode===
+
+To enable this mode, you should first finish at least one turn using normal interactions. (You can consider the input as only one request with limited lines)
+
+Upon finishing this turn, you should first '''output according to the normal interactions''', and then output the following command to standard output (there are line breaks both before and after):
+ <nowiki>>>>BOTZONE_REQUEST_KEEP_RUNNING<<<</nowiki>
+
+It is recommended to flush the standard output buffer after that. (e.g. <code>fflush(stdout);</code>, <code>cout << flush;</code>, <code>sys.stdout.flush()</code>)
+
+Outputing this command means to finish this turn.
+
+
+===What happens when I enable it===
+
+When Botzone receives this command, it will know that the bot has finished its output and force it to sleep (by sending SIGSTOP signal to the process group), and wake it up until next turn (by sending SIGCONT signal to the process group).
+
+Because of the delay, forcing the bot to sleep is likely to occur not immediately after the line is printed, but while the bot waits for the next turn of input. '''If you need timing, please start the clock after operations like input() or getline().'''
+
+Once this mode is enabled:
+* '''The input of the bot in the next turn will only contain game information (request) of this turn, without history data (requests and responses in the previous turns) and data saved'''
+* The features of debug, data and globaldata will be invalid. (Do NOT save multiple lines of data into globaldata when you use simple I/O)
+* The output format of the bot is unchanged.
+* If your bot is using CPU (such as multi-threading to calculate some information in advance) before its turn, such CPU time used is counted into the time for the next turn, so please do not do this
+
+
+===To keep this mode for multiple turns===
+
+'''To keep this mode, you need to output the command in every turn after outputing the response.'''
+
+If you do not output the above command in some turn after enabling this mode, the platform will not know whether your bot has finished outputing and consider it as Time Limit Exceeded (TLE).
+
+If your requirements are very special that you want to close the program after keeping running for several turns in a row and then start again, you need to exit the program in the specific turn (after outputing the response, do not output the above command but simply exit). This way, the next time you run your program, it will start up again as what it will happen by the traditional way.
+
+
+===Debug===
+
+Once this mode is enabled, the "player input" in the game log provided by Botzone will change accordingly, which can be copied for debugging,
+
+Note, however, that this way of debugging assumes that '''the output of your bot is exactly the same as that of the platform''', i.e. '''the same decisions are made on the platform and on your PC in the same situation'''. If your bot introduces random numbers, it will not be debugged properly.
+
+In order to go back to a specific turn, your bot may need to recalculate the actions of the previous turns, which may take a long time.
+

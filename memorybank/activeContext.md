@@ -2,46 +2,39 @@
 
 ## Current Work Focus
 
-**Status**: Bot002 experiencing persistent TLE despite fixes. Created comprehensive request document for DeepSeek consultation.
+**Status**: Tournament system manual created and tested. Bot002 TLE issue still pending DeepSeek consultation.
 
-**Recent Activity** (December 15, 2025):
-- **Created TLE bug solution request document for DeepSeek** ✅:
-  - **Document**: `docs/requests/tle_bug_solution_request.md`
-  - **Context**: Bot002 still gets TLE on Botzone despite previous fix attempts
-  - **Analysis included**:
-    - Timing progression from both logs (original + new still_tle.json)
-    - Bot reaches 951ms → 1000ms TLE despite 700ms limit + 150ms safety buffer
-    - Late-game 3-5x slowdown (200ms → 600ms → 1000ms)
-    - First turn anomaly: 933ms despite 1400ms limit
-  - **Previous fix attempts documented**:
-    - Fix #1: Conservative time limits (0.7s/1.4s) - Failed
-    - Fix #2: Mid-iteration safety check - Insufficient
-  - **Key observations**:
-    - ~300-450ms unaccounted time somewhere
-    - Time limits appear not to be working as intended
-    - Consistent pattern across both TLE logs
-  - **Questions prepared for DeepSeek**:
-    - 8 diagnostic questions covering timing, overhead, evaluation costs
-    - Solution direction questions about adaptive time management
-    - BFS optimization possibilities
-  - **Status**: Request document ready, will be provided to DeepSeek with source code and logs
-  - **Git commit**: Pending
+**Recent Activity** (December 25, 2025):
+- **Created comprehensive tournament system manual** ✅:
+  - **Document**: `docs/manuals/tournament_system_manual.md`
+  - **Purpose**: User guide for the tournament testing infrastructure
+  - **Contents**:
+    - Overview and installation instructions
+    - Bot requirements and protocol compliance
+    - CLI commands documentation (match, tournament, test, compile)
+    - Running matches and tournaments with examples
+    - Testing bots (bot002, bot000_vs_bot003 tests)
+    - Compiling bots and understanding results
+    - Troubleshooting common issues
+    - Architecture overview and advanced usage
+    - Best practices and support resources
+  - **Verification**: Tested all CLI commands to ensure documentation accuracy
+  - **Status**: Manual complete and ready for users
+  - **Git commit**: Pending (will be committed in this workflow)
+
+- **Previous Activity** (December 15, 2025):
+  - **Created TLE bug solution request document for DeepSeek** ✅:
+    - **Document**: `docs/requests/tle_bug_solution_request.md`
+    - **Context**: Bot002 still gets TLE on Botzone despite previous fix attempts
+    - **Analysis included**: Timing progression, late-game slowdown, first turn anomaly
+    - **Status**: Request document ready, awaiting DeepSeek consultation
+    - **Git commit**: Pending
   
-- **Previous TLE fix attempt** (December 15, 2025) - INSUFFICIENT:
-  - **Root cause**: Time check at loop start allowed expensive iterations to exceed 1000ms limit
-    - If check passed at 0.79s, but iteration took 300ms → 1.09s total (exceeded limit)
-    - Late-game BFS + mobility calculations can take 200-300ms in complex positions
-  - **Symptom**: Bot exceeded 1000ms deadline in late-game positions (turn 25+)
-  - **Solution - Two-tier defense-in-depth approach**:
-    1. **More conservative time limits**: 0.7s (vs 1.0s limit), 1.4s first turn (vs 2.0s limit)
-    2. **Mid-iteration safety check**: Added check before evaluation to prevent starting expensive BFS when time is short
-  - **Trade-offs**: 
-    - Sacrifices ~15-20% MCTS iterations for guaranteed time compliance
-    - 300ms safety buffer for regular turns, 600ms for first turn
-    - Bot still performs well strategically (was winning before TLE)
-  - **Documentation**: Created comprehensive docs in `docs/bot_implementation/bot002_tle_fix.md`
-  - **Result**: Bot now has multi-layered time safety, zero TLE risk expected
-  - **Git commit**: Pending
+  - **Previous TLE fix attempt** (December 15, 2025) - INSUFFICIENT:
+    - **Root cause**: Time check at loop start allowed expensive iterations to exceed 1000ms limit
+    - **Solution**: Two-tier defense-in-depth approach with conservative time limits and mid-iteration safety check
+    - **Result**: Multi-layered time safety but TLE persists
+    - **Git commit**: Pending
 
 **Recent Activity** (December 14, 2025):
 

@@ -79,7 +79,14 @@ pip install numpy
 ⚠️ **Blocked**: Bot002 has persistent TLE (Time Limit Exceeded) issue, awaiting expert consultation  
 📅 **Planned**: Advanced features (opening book, endgame solver)
 
-**Recent Updates** (December 15, 2025):
+**Recent Updates** (December 25, 2025):
+- **Tournament System Manual Created**: Comprehensive user guide for tournament testing infrastructure ✅
+  - **Document**: `docs/manuals/tournament_system_manual.md`
+  - **Contents**: Overview, installation, bot requirements, CLI commands, running matches/tournaments, testing bots, compiling bots, troubleshooting, architecture, best practices
+  - **Verification**: All CLI commands tested to ensure documentation accuracy
+  - **Status**: Manual complete and ready for users
+
+**Previous Updates** (December 15, 2025):
 - **Bot002 TLE Request Document Created**: Comprehensive bug solution request for DeepSeek ✅
   - **Problem**: Bot002 still experiences TLE despite previous fixes (0.7s/1.4s limits + mid-iteration check)
   - **Symptom**: Bot reaches 951ms → 1000ms TLE in late-game despite 700ms limit + 150ms safety buffer
@@ -280,6 +287,11 @@ Detailed technical documentation for bot implementations:
 
 - [`docs/bot_implementation/bot001_implementation.md`](docs/bot_implementation/bot001_implementation.md) - Comprehensive Python bot documentation covering all modules, algorithms, and design decisions
 - [`docs/bot_implementation/bot001_cpp_implementation.md`](docs/bot_implementation/bot001_cpp_implementation.md) - C++ implementation guide with compilation, testing, and tournament results
+
+### Tournament System
+User guide for the tournament testing infrastructure:
+
+- [`docs/manuals/tournament_system_manual.md`](docs/manuals/tournament_system_manual.md) - Comprehensive guide covering CLI commands, running matches/tournaments, testing bots, compiling bots, troubleshooting, and best practices
 
 ## References
 
