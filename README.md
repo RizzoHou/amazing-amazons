@@ -40,9 +40,16 @@ amazing-amazons/
 ├── reports/          # Analysis reports
 ├── results/          # Tournament results (JSON)
 └── docs/             # Implementation documentation
+    ├── interfaces/                     # Bot integration documentation for GUI developers
+    │   ├── bot_integration_interface.md      # Protocol specification
+    │   ├── bot_selection_guide.md            # Bot catalog and selection
+    │   ├── integration_examples.md           # Code patterns and examples
+    │   └── improvement_suggestions.md        # Integration improvement suggestions
     ├── bot_implementation/
     │   ├── bot001_implementation.md      # Python bot documentation
     │   └── bot001_cpp_implementation.md  # C++ bot documentation
+    ├── manuals/
+    │   └── tournament_system_manual.md   # Tournament system user guide
     └── requests/
         └── cpp_bot_optimization_request.md  # Optimization request for expert consultation
 ```
@@ -75,11 +82,22 @@ pip install numpy
 
 ## Current Status
 
-✅ **Complete**: Bot001 C++ port, testing infrastructure, bot002 optimized version, and tournament validation  
+✅ **Complete**: Bot001 C++ port, testing infrastructure, bot002 optimized version, tournament validation, and comprehensive bot interface documentation  
 ⚠️ **Blocked**: Bot002 has persistent TLE (Time Limit Exceeded) issue, awaiting expert consultation  
 📅 **Planned**: Advanced features (opening book, endgame solver)
 
 **Recent Updates** (December 25, 2025):
+- **Bot Interface Documentation Created**: Comprehensive documentation for GUI integration ✅
+  - **Location**: `docs/interfaces/` directory
+  - **Purpose**: Enable GUI developers to integrate Amazing Amazons AI bots into their applications
+  - **Documents Created**:
+    1. **Bot Integration Interface Specification** (`bot_integration_interface.md`): Detailed Botzone protocol specification
+    2. **Bot Selection and Configuration Guide** (`bot_selection_guide.md`): Bot catalog with characteristics and selection criteria
+    3. **Integration Examples and Code Patterns** (`integration_examples.md`): Implementation examples in Python, C++, JavaScript
+    4. **Improvement Suggestions for Better Project Integration** (`improvement_suggestions.md`): Recommendations for enhanced integration
+  - **Verification**: All documentation is language-agnostic and framework-independent
+  - **Status**: Documentation complete and ready for GUI developers
+
 - **Tournament System Manual Created**: Comprehensive user guide for tournament testing infrastructure ✅
   - **Document**: `docs/manuals/tournament_system_manual.md`
   - **Contents**: Overview, installation, bot requirements, CLI commands, running matches/tournaments, testing bots, compiling bots, troubleshooting, architecture, best practices
@@ -287,6 +305,14 @@ Detailed technical documentation for bot implementations:
 
 - [`docs/bot_implementation/bot001_implementation.md`](docs/bot_implementation/bot001_implementation.md) - Comprehensive Python bot documentation covering all modules, algorithms, and design decisions
 - [`docs/bot_implementation/bot001_cpp_implementation.md`](docs/bot_implementation/bot001_cpp_implementation.md) - C++ implementation guide with compilation, testing, and tournament results
+
+### Bot Interface Documentation
+Comprehensive documentation for GUI developers to integrate Amazing Amazons AI bots:
+
+- [`docs/interfaces/bot_integration_interface.md`](docs/interfaces/bot_integration_interface.md) - Detailed Botzone protocol specification and integration patterns
+- [`docs/interfaces/bot_selection_guide.md`](docs/interfaces/bot_selection_guide.md) - Bot catalog with characteristics and selection criteria
+- [`docs/interfaces/integration_examples.md`](docs/interfaces/integration_examples.md) - Implementation examples in Python, C++, JavaScript
+- [`docs/interfaces/improvement_suggestions.md`](docs/interfaces/improvement_suggestions.md) - Recommendations for enhanced integration
 
 ### Tournament System
 User guide for the tournament testing infrastructure:
