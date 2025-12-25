@@ -25,7 +25,6 @@ htmlcov/
 # Project specific
 results/
 logs/
-reports/
 
 # C++ compilation results
 *.o
