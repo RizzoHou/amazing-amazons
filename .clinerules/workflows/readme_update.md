@@ -101,7 +101,7 @@ Process:
 README should be **user-focused and accessible**. Avoid:
 
 ❌ **Overly Technical Implementation Details**
-- Detailed algorithm pseudocode → Belongs in `docs/bot_implementation/`
+- Detailed algorithm pseudocode → Belongs in `docs/bots/implementations/`
 - Internal function documentation → Belongs in code comments
 - Low-level optimization details → Belongs in `memorybank/systemPatterns.md`
 

@@ -68,7 +68,13 @@ Amazing Amazons is a project focused on developing high-intelligence AI bots for
 ### Project Resources
 - Core game logic implemented in `core/game.py`
 - Additional AI utilities in `core/ai.py` (older MCTS implementation)
-- Comprehensive documentation in `docs/bot_implementation/`
+- Comprehensive documentation in `docs/` directory including:
+  - `docs/bots/implementations/` - Bot implementation guides
+  - `docs/bots/reports/` - Bot performance reports
+  - `docs/interfaces/` - Bot integration documentation
+  - `docs/manuals/` - User guides and manuals
+  - `docs/references/` - External references and consultations
+  - `docs/requests/` - Optimization and bug fix requests
 - Wiki documentation stored in `wiki/` folder for reference
 
 ## Success Criteria

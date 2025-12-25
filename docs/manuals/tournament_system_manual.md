@@ -411,7 +411,7 @@ jobs:
 
 - This manual: `docs/manuals/tournament_system_manual.md`
 - Botzone documentation: `wiki/` directory
-- Bot implementation guides: `docs/bot_implementation/`
+- Bot implementation guides: `docs/bots/implementations/`
 
 ### Source Code
 

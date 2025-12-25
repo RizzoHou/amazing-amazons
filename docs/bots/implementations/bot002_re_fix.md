@@ -175,7 +175,7 @@ g++ -std=c++17 -O3 -o bots/bot002 bots/bot002.cpp
 ## References
 
 - **Bug Report:** `docs/requests/re_bug_solution_request.md`
-- **DeepSeek Solution:** `docs/reference/deepseek/a_solution_to_re.md`
+- **DeepSeek Solution:** `docs/references/deepseek/a_solution_to_re.md`
 - **Error Log:** `logs/botzone_debug/re.json`
 
 ## Lessons Learned

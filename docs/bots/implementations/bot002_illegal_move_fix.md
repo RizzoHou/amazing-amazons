@@ -201,7 +201,7 @@ Only odd-indexed lines are new information (actual moves).
 ## References
 
 - **Bug Report Log:** `logs/botzone_debug/illegal_movemnet2.log`
-- **Solution Analysis:** `docs/reference/deepseek/solution_to_illegal_movement.md`
+- **Solution Analysis:** `docs/references/deepseek/solution_to_illegal_movement.md`
 - **Solution Request:** `docs/requests/illegal_movement_bug_solution_request.md`
 - **Bot Implementation:** `bots/bot002.cpp`
 - **Git Commit:** a6ea4d3

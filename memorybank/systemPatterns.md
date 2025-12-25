@@ -20,9 +20,13 @@ amazing-amazons/
 │   ├── botzone_simulator.py   # I/O protocol simulator
 │   └── tournament.py           # Bot comparison framework
 ├── docs/             # Implementation documentation
-│   └── bot_implementation/
-│       ├── bot001_implementation.md      # Python bot docs
-│       └── bot001_cpp_implementation.md  # C++ bot docs
+│   ├── bots/                    # Bot-related documentation
+│   │   ├── implementations/     # Bot implementation guides
+│   │   └── reports/             # Bot performance reports
+│   ├── interfaces/              # Bot integration documentation
+│   ├── manuals/                # User guides
+│   ├── references/             # External references
+│   └── requests/              # Optimization and bug fix requests
 ├── memorybank/       # Project documentation
 ├── wiki/             # Botzone platform documentation
 ├── logs/             # Tournament logs and match output

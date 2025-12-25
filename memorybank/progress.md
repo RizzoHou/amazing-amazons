@@ -65,7 +65,7 @@
       - Fix: Only process odd-indexed lines (responses), skip even-indexed duplicates
     - **Added defensive assertion**: DEBUG mode check in apply_move() for early error detection
     - **Updated .clinerules**: Added sequential testing requirement (memory constraints)
-    - **Documentation**: Created `docs/bot_implementation/bot002_illegal_move_fix.md`
+    - **Documentation**: Created `docs/bots/implementations/bot002_illegal_move_fix.md`
     - **Git commit**: a6ea4d3
   
   - **Bug Fix #3** (Dec 14, 2025): Fixed Runtime Error (RE) - SIGSEGV crashes ✅
@@ -77,9 +77,9 @@
       3. Added `reset()` method to clear tree between turns
     - **Trade-offs**: Slightly slower (no tree reuse) but 100% stable, simpler code, and automatic memory management
     - **Documentation**: Created comprehensive docs:
-      - `docs/bot_implementation/bot002_re_fix.md` - Complete fix documentation
+      - `docs/bots/implementations/bot002_re_fix.md` - Complete fix documentation
       - `docs/requests/re_bug_solution_request.md` - Detailed bug report for DeepSeek
-      - `docs/reference/deepseek/a_solution_to_re.md` - DeepSeek's solution
+      - `docs/references/deepseek/a_solution_to_re.md` - DeepSeek's solution
     - **Result**: Bot compiles cleanly, zero crashes expected
     - **Git commit**: dce4e5c
   
@@ -170,13 +170,13 @@
   - **Status**: Manual complete and ready for users
 
 - **Bot001 Implementation Documentation** ✓ (Jan 8, 2025)
-  - `docs/bot_implementation/bot001_implementation.md`: Comprehensive 700+ line documentation
+  - `docs/bots/implementations/bot001_implementation.md`: Comprehensive 700+ line documentation
   - Covers all modules: Game Constants, Board, MCTS Tree, Evaluation, Search, I/O
   - Includes algorithm analysis, design rationale, performance tuning
   - Built incrementally following .clinerules best practices
 
 - **Bot001 C++ Implementation Documentation** ✓ (Dec 10, 2025)
-  - `docs/bot_implementation/bot001_cpp_implementation.md`: Complete C++ port documentation
+  - `docs/bots/implementations/bot001_cpp_implementation.md`: Complete C++ port documentation
   - Covers architecture, compilation, testing, and performance
   - Includes tournament results (50 games Python vs C++)
   - Performance analysis and comparison tables
@@ -278,7 +278,7 @@
   - Applied README update workflow to synchronize with current project state
   - Updated Current Status section with recent achievements (workflows, documentation)
   - Added Recent Updates highlighting January 8, 2025 work
-  - Expanded Project Structure to show docs/bot_implementation/ directory
+  - Expanded Project Structure to show docs/bots/implementations/ directory
   - Added Bot Implementation Documentation section
   - Updated Next Steps to reflect completed milestones
   - Fixed bot001 description from "Neural MCTS" to "Multi-Component MCTS"

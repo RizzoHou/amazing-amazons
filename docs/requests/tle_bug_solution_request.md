@@ -210,8 +210,8 @@ Identify why the bot exceeds 1000ms despite 700ms limit + 150ms safety buffer, a
 - `logs/botzone_debug/tle.log` - Original TLE log before fix
 
 **Supporting documentation**:
-- `docs/bot_implementation/bot002_tle_fix.md` - Previous fix attempt details
-- `docs/reference/deepseek/optimization_plan_from_ds.md` - Original optimization plan
+- `docs/bots/implementations/bot002_tle_fix.md` - Previous fix attempt details
+- `docs/references/deepseek/optimization_plan_from_ds.md` - Original optimization plan
 
 ---
 

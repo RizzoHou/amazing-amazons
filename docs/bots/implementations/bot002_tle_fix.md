@@ -140,7 +140,7 @@ g++ -O3 -march=native -flto -std=c++11 -o bots/bot002 bots/bot002.cpp
 
 ### Git Commit
 ```bash
-git add bots/bot002.cpp docs/bot_implementation/bot002_tle_fix.md
+git add bots/bot002.cpp docs/bots/implementations/bot002_tle_fix.md
 git commit -m "Fix bot002 TLE bug with conservative time limits and mid-iteration safety check"
 ```
 
@@ -177,6 +177,6 @@ The bot sacrifices ~15-20% MCTS iterations for guaranteed time compliance, which
 ## Related Documentation
 
 - Initial bug report: `logs/botzone_debug/tle.log`
-- Bot002 illegal move fix: `docs/bot_implementation/bot002_illegal_move_fix.md`
-- Bot002 RE fix: `docs/bot_implementation/bot002_re_fix.md`
-- Optimization plan: `docs/reference/deepseek/optimization_plan_from_ds.md`
+- Bot002 illegal move fix: `docs/bots/implementations/bot002_illegal_move_fix.md`
+- Bot002 RE fix: `docs/bots/implementations/bot002_re_fix.md`
+- Optimization plan: `docs/references/deepseek/optimization_plan_from_ds.md`

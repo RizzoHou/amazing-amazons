@@ -25,11 +25,15 @@ amazing-amazons/
 │   ├── game.py       # Board representation and move generation
 │   └── ai.py         # Generic MCTS implementation (legacy)
 ├── bots/             # Bot implementations
+│   ├── bot000.cpp    # MCTS bot (identical to bot003)
+│   ├── bot000        # Compiled MCTS bot binary
 │   ├── bot001.py     # Python MCTS bot (Multi-Component)
 │   ├── bot001.cpp    # C++ port (4x faster, production-ready)
 │   ├── bot001_cpp    # Compiled C++ binary
 │   ├── bot002.cpp    # Optimized C++ bot (bitboards, faster)
-│   └── bot002_cpp    # Compiled optimized binary
+│   ├── bot002_cpp    # Compiled optimized binary
+│   ├── bot003.cpp    # MCTS bot (identical to bot000)
+│   └── bot003        # Compiled MCTS bot binary
 ├── scripts/          # Testing and utility scripts
 │   ├── test_bot_simple.py      # Quick bot functionality tests
 │   ├── botzone_simulator.py   # I/O protocol simulator
@@ -40,18 +44,24 @@ amazing-amazons/
 ├── reports/          # Analysis reports
 ├── results/          # Tournament results (JSON)
 └── docs/             # Implementation documentation
-    ├── interfaces/                     # Bot integration documentation for GUI developers
+    ├── bots/                    # Bot-related documentation
+    │   ├── implementations/     # Bot implementation guides
+    │   └── reports/             # Bot performance reports
+    ├── interfaces/              # Bot integration documentation for GUI developers
     │   ├── bot_integration_interface.md      # Protocol specification
     │   ├── bot_selection_guide.md            # Bot catalog and selection
     │   ├── integration_examples.md           # Code patterns and examples
     │   └── improvement_suggestions.md        # Integration improvement suggestions
-    ├── bot_implementation/
-    │   ├── bot001_implementation.md      # Python bot documentation
-    │   └── bot001_cpp_implementation.md  # C++ bot documentation
-    ├── manuals/
+    ├── manuals/                # User guides
     │   └── tournament_system_manual.md   # Tournament system user guide
-    └── requests/
-        └── cpp_bot_optimization_request.md  # Optimization request for expert consultation
+    ├── references/             # External references
+    │   ├── deepseek/          # DeepSeek consultation documents
+    │   └── gemini/            # Gemini consultation documents
+    └── requests/              # Optimization and bug fix requests
+        ├── cpp_bot_optimization_request.md       # Optimization request
+        ├── illegal_movement_bug_solution_request.md  # Illegal move bug request
+        ├── re_bug_solution_request.md           # Runtime error bug request
+        └── tle_bug_solution_request.md          # TLE bug request
 ```
 
 ## Setup
@@ -122,7 +132,7 @@ pip install numpy
     2. Removed tree reuse (`advance_root()`) - rebuild tree each turn
     3. Added `reset()` method to clear tree between turns
   - **Trade-offs**: Slightly slower (no tree reuse) but 100% stable with simpler code
-  - **Documentation**: `docs/bot_implementation/bot002_re_fix.md` and `docs/requests/re_bug_solution_request.md`
+  - **Documentation**: `docs/bots/implementations/bot002_re_fix.md` and `docs/requests/re_bug_solution_request.md`
   - Git commit: dce4e5c
   
 - **Bot002 Critical Bug Fixes**: Fixed TWO major bugs causing illegal moves on Botzone ✅
@@ -133,7 +143,7 @@ pip install numpy
     - Fix: Only process odd-indexed lines (actual responses), skip even-indexed duplicates
   - Added defensive assertion in DEBUG mode for early error detection
   - Updated .clinerules with sequential testing requirement
-  - Comprehensive documentation: `docs/bot_implementation/bot002_illegal_move_fix.md`
+  - Comprehensive documentation: `docs/bots/implementations/bot002_illegal_move_fix.md`
   - Git commit: a6ea4d3
   
 - **Status**: Bot002 fully fixed (both illegal moves and crashes), stable, and ready for Botzone deployment
@@ -183,8 +193,18 @@ See [`memorybank/progress.md`](memorybank/progress.md) for detailed status.
 
 ## Bot Architecture
 
-### Bot001: Multi-Component MCTS (Python & C++)
+### Available Bots
 
+The project includes several bot implementations with varying levels of sophistication:
+
+#### Bot000: MCTS Bot (Identical to Bot003)
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS (similar to Bot001)
+- **Features**: Phase-aware weighting, dynamic UCB constant, long-running mode
+- **Performance**: Similar to Bot001 C++ version
+- **Purpose**: Baseline MCTS implementation for testing and comparison
+
+#### Bot001: Multi-Component MCTS (Primary Bot)
 Available in both Python (`bot001.py`) and C++ (`bot001.cpp`) with identical algorithms.
 
 **Components**:
@@ -219,6 +239,21 @@ C++ version (4x faster):
 - Average: 0.9s per move
 - MCTS iterations: 12,000-32,000 per turn
 - No external dependencies
+
+#### Bot002: Optimized Bitboard MCTS
+- **Language**: C++
+- **Algorithm**: MCTS with bitboard representation and optimized BFS
+- **Features**: Bitboard move generation, Xorshift64 PRNG, node pool allocator
+- **Performance**: Very fast (1.128s per move average)
+- **Status**: Stable but has TLE (Time Limit Exceeded) issue in late game
+- **Current Focus**: TLE bug resolution with DeepSeek consultation
+
+#### Bot003: MCTS Bot (Identical to Bot000)
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS (similar to Bot001)
+- **Features**: Phase-aware weighting, dynamic UCB constant, long-running mode
+- **Performance**: Similar to Bot001 C++ version
+- **Purpose**: Alternative MCTS implementation for testing and comparison
 
 ## Usage
 
@@ -303,8 +338,8 @@ Comprehensive project documentation is maintained in the `memorybank/` directory
 ### Bot Implementation
 Detailed technical documentation for bot implementations:
 
-- [`docs/bot_implementation/bot001_implementation.md`](docs/bot_implementation/bot001_implementation.md) - Comprehensive Python bot documentation covering all modules, algorithms, and design decisions
-- [`docs/bot_implementation/bot001_cpp_implementation.md`](docs/bot_implementation/bot001_cpp_implementation.md) - C++ implementation guide with compilation, testing, and tournament results
+- [`docs/bots/implementations/bot001_implementation.md`](docs/bots/implementations/bot001_implementation.md) - Comprehensive Python bot documentation covering all modules, algorithms, and design decisions
+- [`docs/bots/implementations/bot001_cpp_implementation.md`](docs/bots/implementations/bot001_cpp_implementation.md) - C++ implementation guide with compilation, testing, and tournament results
 
 ### Bot Interface Documentation
 Comprehensive documentation for GUI developers to integrate Amazing Amazons AI bots:

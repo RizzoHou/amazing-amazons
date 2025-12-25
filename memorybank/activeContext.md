@@ -84,7 +84,7 @@
     2. Removed tree reuse (`advance_root()`) - rebuild tree each turn for simplicity
     3. Added `reset()` method to clear tree between turns
   - **Trade-offs**: Slightly slower (no tree reuse) but 100% stable and simpler code
-  - **Documentation**: Created comprehensive docs in `docs/bot_implementation/bot002_re_fix.md` and `docs/requests/re_bug_solution_request.md`
+  - **Documentation**: Created comprehensive docs in `docs/bots/implementations/bot002_re_fix.md` and `docs/requests/re_bug_solution_request.md`
   - **Result**: Bot compiles cleanly, zero crashes expected
   - **Git commit**: dce4e5c
   
@@ -97,7 +97,7 @@
     - Fix: Only process odd-indexed lines (actual responses), skip even-indexed duplicates
   - **Added defensive assertion**: DEBUG mode check in apply_move() to catch similar bugs early
   - **Updated .clinerules**: Added sequential testing requirement due to memory constraints
-  - **Created comprehensive documentation**: `docs/bot_implementation/bot002_illegal_move_fix.md`
+  - **Created comprehensive documentation**: `docs/bots/implementations/bot002_illegal_move_fix.md`
   - **Git commit**: a6ea4d3
   - **Status**: Bug fixed, compiled successfully, ready for Botzone deployment
   
@@ -244,7 +244,7 @@
    - Results: `results/tournament_20251210_212408.json`
 
 4. **Documentation**:
-   - Created `docs/bot_implementation/bot001_cpp_implementation.md`
+   - Created `docs/bots/implementations/bot001_cpp_implementation.md`
    - Covers architecture, compilation, testing, performance
    - Includes complete tournament analysis
    - Updated `memorybank/progress.md` with completed milestones
@@ -279,7 +279,7 @@
    - Execution notes for proper implementation
 
 #### Documentation Enhancement
-1. **Bot001 Implementation Documentation** (`docs/bot_implementation/bot001_implementation.md`):
+1. **Bot001 Implementation Documentation** (`docs/bots/implementations/bot001_implementation.md`):
    - Created comprehensive 700+ line documentation covering all implementation details
    - Built incrementally section by section (following new .clinerules guideline)
    - Documented 5 modules: Game Constants, Board, MCTS Tree, Evaluation, Search Algorithm, I/O
@@ -308,7 +308,7 @@
    - Updated README.md following new workflow guidelines
    - Synchronized Current Status section with memory bank
    - Added Recent Updates highlighting January 8, 2025 achievements
-   - Expanded Project Structure to show docs/bot_implementation/ directory
+   - Expanded Project Structure to show docs/bots/implementations/ directory
    - Added Bot Implementation Documentation section
    - Updated Next Steps to reflect completed milestones
    - Fixed bot001 description accuracy (Multi-Component MCTS, not Neural)

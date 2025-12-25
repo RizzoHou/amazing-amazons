@@ -68,42 +68,47 @@ This guide helps GUI developers choose and configure the appropriate Amazing Ama
 - When slight strength reduction is acceptable
 - Testing and rapid iteration
 
-### bot000.cpp - Random Move Bot (C++)
+### bot000.cpp - MCTS Bot (Identical to bot003)
 
-**Algorithm**: Random legal move selection
-**Strength**: Very Low
-**Speed**: Very Fast (< 0.1s per move)
-**Memory**: Minimal
+**Algorithm**: Multi-Component Monte Carlo Tree Search
+**Strength**: Medium-High (similar to bot001)
+**Speed**: Fast (similar to bot001.cpp)
+**Memory**: ~80 MB
 **Dependencies**: None
 
 **Characteristics:**
-- Simple random move selection
-- Useful for testing and debugging
-- Baseline for performance comparison
+- Multi-component evaluation function
+- Phase-aware weights (early/mid/late game)
+- Dynamic UCB exploration constant
+- Tree reuse between turns
+- Long-running mode optimized
 
 **Best For:**
-- Testing game mechanics
-- Debugging integration
-- Beginner opponents
-- Performance baselines
+- High-quality AI opponents
+- When bot001.cpp is not available
+- Testing and comparison with bot003
+- Alternative MCTS implementation
 
-### bot003.cpp - Simple Heuristic Bot (C++)
+### bot003.cpp - MCTS Bot (Identical to bot000)
 
-**Algorithm**: Basic heuristic evaluation
-**Strength**: Low
-**Speed**: Fast (0.5s per move)
-**Memory**: Minimal
+**Algorithm**: Multi-Component Monte Carlo Tree Search
+**Strength**: Medium-High (similar to bot001)
+**Speed**: Fast (similar to bot001.cpp)
+**Memory**: ~80 MB
 **Dependencies**: None
 
 **Characteristics:**
-- Simple territory and mobility evaluation
-- No MCTS search
-- Predictable behavior
+- Multi-component evaluation function
+- Phase-aware weights (early/mid/late game)
+- Dynamic UCB exploration constant
+- Tree reuse between turns
+- Long-running mode optimized
 
 **Best For:**
-- Intermediate difficulty opponents
-- When deterministic behavior is desired
-- Educational purposes
+- High-quality AI opponents
+- When bot001.cpp is not available
+- Testing and comparison with bot000
+- Alternative MCTS implementation
 
 ## Selection Criteria
 
@@ -115,8 +120,8 @@ This guide helps GUI developers choose and configure the appropriate Amazing Ama
 | Maximum Speed | bot002.cpp | Fastest computation, bitboard optimized |
 | Python Environment | bot001.py | Native Python, easier integration |
 | Minimal Dependencies | bot001.cpp/bot002.cpp | No external libraries needed |
-| Beginner Opponent | bot000.cpp | Random moves, easy to beat |
-| Intermediate Opponent | bot003.cpp | Basic strategy, not too challenging |
+| Beginner Opponent | bot000.cpp | MCTS bot, easier than bot001 |
+| Intermediate Opponent | bot003.cpp | MCTS bot, similar to bot000 |
 | Research/Education | bot001.py | Transparent Python implementation |
 | Production Deployment | bot001.cpp | Balance of strength and speed |
 
@@ -190,8 +195,8 @@ while iterations < max_iterations and time_remaining:
 ```
 
 **Method 3: Multiple Bot Strategy**
-- Easy: bot000.cpp (random)
-- Medium: bot003.cpp (simple heuristic)
+- Easy: bot000.cpp (MCTS bot, easier than bot001)
+- Medium: bot003.cpp (MCTS bot, similar to bot000)
 - Hard: bot002.cpp (optimized MCTS)
 - Expert: bot001.cpp (full MCTS)
 
