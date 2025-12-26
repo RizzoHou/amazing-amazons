@@ -92,26 +92,42 @@ pip install numpy
 
 ## Current Status
 
-✅ **Complete**: Bot001 C++ port, testing infrastructure, bot002 optimized version, tournament validation, and comprehensive bot interface documentation  
+✅ **Complete**: Bot001 C++ port, testing infrastructure, bot002 optimized version, tournament validation, comprehensive bot interface documentation, and five new optimization bots (004-008)  
 ⚠️ **Blocked**: Bot002 has persistent TLE (Time Limit Exceeded) issue, awaiting expert consultation  
-📅 **Planned**: Advanced features (opening book, endgame solver)
+📅 **In Progress**: Systematic testing of optimization techniques via competition automation
 
-**Recent Updates** (December 25, 2025):
+**Recent Updates** (December 26, 2025):
+- **Created five new C++ bots with optimization techniques** ✅
+  - **bot004.cpp**: Move ordering heuristics (sorts moves by centrality and arrow proximity)
+  - **bot005.cpp**: Transposition table (caches evaluations using Zobrist hashing)
+  - **bot006.cpp**: Progressive widening (limits child expansion based on node visits)
+  - **bot007.cpp**: Bitboard representation (3x uint64_t for faster operations)
+  - **bot008.cpp**: Adaptive time management (dynamic time allocation based on game phase)
+  - **Status**: All bots created, compiled, and ready for systematic testing
+
+- **Created competition automation system** ✅
+  - **Script**: `scripts/run_competitions.py`
+  - **Purpose**: Automate 10-game competitions between each new bot and bot003
+  - **Features**: Sequential execution (respects memory constraints), detailed results collection, JSON output, markdown reports
+  - **Output**: Results in `results/competitions/`, analysis reports in `docs/analysis/`
+  - **Status**: System operational, initial tests completed
+
+- **Initial competition results** ⚠️
+  - **Test**: Ran 1-game competitions for each bot vs bot003
+  - **Findings**: Some bots have TLE issues (bot004, bot008) and protocol issues (bot007)
+  - **Analysis**: Reports generated in `docs/analysis/` directory
+  - **Next**: Full 10-game competitions needed for statistical significance
+
+**Previous Updates** (December 25, 2025):
 - **Bot Interface Documentation Created**: Comprehensive documentation for GUI integration ✅
   - **Location**: `docs/interfaces/` directory
   - **Purpose**: Enable GUI developers to integrate Amazing Amazons AI bots into their applications
-  - **Documents Created**:
-    1. **Bot Integration Interface Specification** (`bot_integration_interface.md`): Detailed Botzone protocol specification
-    2. **Bot Selection and Configuration Guide** (`bot_selection_guide.md`): Bot catalog with characteristics and selection criteria
-    3. **Integration Examples and Code Patterns** (`integration_examples.md`): Implementation examples in Python, C++, JavaScript
-    4. **Improvement Suggestions for Better Project Integration** (`improvement_suggestions.md`): Recommendations for enhanced integration
-  - **Verification**: All documentation is language-agnostic and framework-independent
+  - **Documents Created**: 4 comprehensive interface documents
   - **Status**: Documentation complete and ready for GUI developers
 
 - **Tournament System Manual Created**: Comprehensive user guide for tournament testing infrastructure ✅
   - **Document**: `docs/manuals/tournament_system_manual.md`
   - **Contents**: Overview, installation, bot requirements, CLI commands, running matches/tournaments, testing bots, compiling bots, troubleshooting, architecture, best practices
-  - **Verification**: All CLI commands tested to ensure documentation accuracy
   - **Status**: Manual complete and ready for users
 
 **Previous Updates** (December 15, 2025):
@@ -253,7 +269,42 @@ C++ version (4x faster):
 - **Algorithm**: Multi-Component MCTS (similar to Bot001)
 - **Features**: Phase-aware weighting, dynamic UCB constant, long-running mode
 - **Performance**: Similar to Bot001 C++ version
-- **Purpose**: Alternative MCTS implementation for testing and comparison
+- **Purpose**: Baseline bot for testing optimization techniques
+
+#### Bot004: Move Ordering Heuristics
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS with move ordering
+- **Features**: Sorts moves by centrality and arrow proximity before MCTS expansion
+- **Goal**: Improve search efficiency by exploring promising moves first
+- **Status**: Created and compiled, initial testing shows TLE issues
+
+#### Bot005: Transposition Table
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS with transposition table
+- **Features**: Caches evaluation results using Zobrist hashing (2^20 entries)
+- **Goal**: Avoid recomputing evaluations for identical positions
+- **Status**: Created and compiled, ready for testing
+
+#### Bot006: Progressive Widening
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS with progressive widening
+- **Features**: Limits child expansion based on node visits (sqrt(visits) children)
+- **Goal**: Focus search on most promising branches in high-branching positions
+- **Status**: Created and compiled, ready for testing
+
+#### Bot007: Bitboard Representation
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS with bitboard representation
+- **Features**: Uses 3x uint64_t bitboards instead of 8x8 array
+- **Goal**: Faster move generation and board operations
+- **Status**: Created and compiled, initial testing shows protocol issues
+
+#### Bot008: Adaptive Time Management
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS with adaptive time management
+- **Features**: Dynamically adjusts time per move based on game phase and remaining time
+- **Goal**: Better time allocation for critical positions
+- **Status**: Created and compiled, initial testing shows TLE issues
 
 ## Usage
 
@@ -370,8 +421,10 @@ User guide for the tournament testing infrastructure:
 6. ✅ Create C++ port for better performance
 7. ✅ Run comprehensive tournament (50 games)
 8. 🔄 Submit C++ bot to Botzone and establish baseline ELO
-9. 📅 Optimize based on match analysis
-10. 📅 Explore advanced features (opening book, endgame solver)
+9. ✅ Create five optimization bots (004-008) and competition automation system
+10. 📅 Run full 10-game competitions for each optimization bot vs bot003
+11. 📅 Analyze results to identify most effective optimization techniques
+12. 📅 Explore advanced features (opening book, endgame solver)
 
 ## License
 

@@ -99,6 +99,47 @@
     - **Git commit**: Pending
   - **Overall Status**: Bot002 stable (no crashes, no illegal moves), but TLE issue blocks Botzone deployment
 
+- **Bot003 C++** (`bots/bot003.cpp`): Enhanced version with improvements ✓ (NEW - Dec 26, 2025)
+  - Based on bot001.cpp with additional optimizations
+  - Used as baseline for testing new optimization techniques
+  - Compilation: `g++ -O2 -std=c++11 -o bots/bot003 bots/bot003.cpp`
+  - **Status**: Baseline bot for comparison testing
+
+- **Bot004 C++** (`bots/bot004.cpp`): Move ordering heuristics ✓ (NEW - Dec 26, 2025)
+  - **Improvement**: Sorts moves by centrality and arrow proximity before MCTS expansion
+  - **Goal**: Improve search efficiency by exploring promising moves first
+  - **Implementation**: Added `sort_moves_by_heuristic()` function
+  - **Compilation**: `g++ -O2 -std=c++11 -o bots/bot004 bots/bot004.cpp`
+  - **Status**: Created and compiled, ready for testing
+
+- **Bot005 C++** (`bots/bot005.cpp`): Transposition table ✓ (NEW - Dec 26, 2025)
+  - **Improvement**: Caches evaluation results for board positions using Zobrist hashing
+  - **Goal**: Avoid recomputing evaluations for identical positions
+  - **Implementation**: Added `TranspositionTable` class with 2^20 entries
+  - **Compilation**: `g++ -O2 -std=c++11 -o bots/bot005 bots/bot005.cpp`
+  - **Status**: Created and compiled, ready for testing
+
+- **Bot006 C++** (`bots/bot006.cpp`): Progressive widening ✓ (NEW - Dec 26, 2025)
+  - **Improvement**: Limits child expansion based on node visits (sqrt(visits) children)
+  - **Goal**: Focus search on most promising branches in high-branching positions
+  - **Implementation**: Modified `expand()` method in MCTS class
+  - **Compilation**: `g++ -O2 -std=c++11 -o bots/bot006 bots/bot006.cpp`
+  - **Status**: Created and compiled, ready for testing
+
+- **Bot007 C++** (`bots/bot007.cpp`): Bitboard representation ✓ (NEW - Dec 26, 2025)
+  - **Improvement**: Uses 3x uint64_t bitboards instead of 8x8 array
+  - **Goal**: Faster move generation and board operations
+  - **Implementation**: Complete rewrite with bitboard operations
+  - **Compilation**: `g++ -O2 -std=c++11 -o bots/bot007 bots/bot007.cpp`
+  - **Status**: Created and compiled, ready for testing
+
+- **Bot008 C++** (`bots/bot008.cpp`): Adaptive time management ✓ (NEW - Dec 26, 2025)
+  - **Improvement**: Dynamically adjusts time per move based on game phase and remaining time
+  - **Goal**: Better time allocation for critical positions
+  - **Implementation**: Added `AdaptiveTimeManager` class
+  - **Compilation**: `g++ -O2 -std=c++11 -o bots/bot008 bots/bot008.cpp`
+  - **Status**: Created and compiled, ready for testing
+
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated
@@ -362,25 +403,36 @@
    - [ ] Write troubleshooting guide
 
 ### Medium-Term (Improvements)
-7. **Bot001 optimization**
+7. **Bot optimization testing** (IN PROGRESS - Dec 26, 2025)
+   - [x] Create bot004 with move ordering heuristics
+   - [x] Create bot005 with transposition table
+   - [x] Create bot006 with progressive widening
+   - [x] Create bot007 with bitboard representation
+   - [x] Create bot008 with adaptive time management
+   - [x] Create competition automation script
+   - [ ] Run 10-game competitions for each bot vs bot003
+   - [ ] Analyze results to identify most effective improvements
+   - [ ] Document findings in `docs/analysis/`
+
+8. **Bot001 optimization**
    - [ ] Tune phase weights through testing
    - [ ] Optimize BFS territory calculation
    - [ ] Cache evaluation results
    - [ ] Tune dynamic UCB parameters
-   - [ ] Add transposition table
-   - [ ] Implement move ordering heuristics
+   - [ ] Add transposition table (implemented in bot005)
+   - [ ] Implement move ordering heuristics (implemented in bot004)
 
-8. **Evaluation function improvements**
+9. **Evaluation function improvements**
    - [ ] Analyze component contributions
    - [ ] Experiment with different weight combinations
    - [ ] Add endgame-specific heuristics
    - [ ] Machine learning for weight optimization
 
-9. **Bot002 development**
-   - [ ] Design new architecture
-   - [ ] Implement and test locally
-   - [ ] Compare against bot001
-   - [ ] Submit if better performance
+10. **Bot002 development**
+    - [ ] Design new architecture
+    - [ ] Implement and test locally
+    - [ ] Compare against bot001
+    - [ ] Submit if better performance
 
 ### Long-Term (Advanced Features)
 10. **Opening book**
@@ -568,5 +620,5 @@ None - testing infrastructure complete
 
 ---
 
-**Last Updated**: 2025-12-10 (C++ bot and tournament system completed)
-**Next Review**: After Botzone submission
+**Last Updated**: 2025-12-26 (Created bots 004-008 with optimization techniques and competition automation system)
+**Next Review**: After running full 10-game competitions and analyzing results
