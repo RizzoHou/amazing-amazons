@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Command-line interface for the tournament system.
 

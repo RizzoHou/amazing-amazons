@@ -25,6 +25,7 @@ htmlcov/
 # Project specific
 results/
 logs/
+cli
 
 # C++ compilation results
 *.o
