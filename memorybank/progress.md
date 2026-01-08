@@ -140,6 +140,17 @@
   - **Compilation**: `g++ -O2 -std=c++11 -o bots/bot008 bots/bot008.cpp`
   - **Status**: Created and compiled, ready for testing
 
+- **Bot009 C++** (`bots/bot009.cpp`): Opponent.cpp weight integration ✓ (NEW - Jan 8, 2026)
+  - **Improvement**: Uses sophisticated 28x6 weight array from opponent.cpp instead of EARLY/MID/LATE weights
+  - **Goal**: Leverage opponent.cpp's optimized weight tuning for better evaluation
+  - **Implementation**: 
+    - Replaced EARLY/MID/LATE weight arrays with opponent.cpp's ARGS array
+    - Updated `get_phase_weights()` to use opponent.cpp's 28-turn weight progression
+    - Uses only first 5 weights from each row (opponent.cpp has 6 components)
+  - **Compilation**: `g++ -std=c++11 -O2 -o bots/bot009 bots/bot009.cpp`
+  - **Testing**: Verified with basic test input, produces valid moves
+  - **Status**: Fully functional and ready for testing against other bots
+
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated
@@ -620,5 +631,5 @@ None - testing infrastructure complete
 
 ---
 
-**Last Updated**: 2025-12-26 (Created bots 004-008 with optimization techniques and competition automation system)
-**Next Review**: After running full 10-game competitions and analyzing results
+**Last Updated**: 2026-01-08 (Created bot009 with opponent.cpp weight integration)
+**Next Review**: After testing bot009 against other bots

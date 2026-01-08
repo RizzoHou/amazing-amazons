@@ -96,6 +96,17 @@ pip install numpy
 ⚠️ **Blocked**: Bot002 has persistent TLE (Time Limit Exceeded) issue, awaiting expert consultation  
 📅 **In Progress**: Systematic testing of optimization techniques via competition automation
 
+**Recent Updates** (January 8, 2026):
+- **Created bot009.cpp by integrating opponent.cpp weights into bot003** ✅
+  - **Improvement**: Uses sophisticated 28x6 weight array from opponent.cpp instead of EARLY/MID/LATE weights
+  - **Implementation**: 
+    - Replaced EARLY/MID/LATE weight arrays with opponent.cpp's ARGS array
+    - Updated `get_phase_weights()` to use opponent.cpp's 28-turn weight progression
+    - Uses only first 5 weights from each row (opponent.cpp has 6 components)
+  - **Compilation**: `g++ -std=c++11 -O2 -o bots/bot009 bots/bot009.cpp`
+  - **Testing**: Verified with basic test input, produces valid moves
+  - **Status**: Fully functional and ready for testing against other bots
+
 **Recent Updates** (December 26, 2025):
 - **Created five new C++ bots with optimization techniques** ✅
   - **bot004.cpp**: Move ordering heuristics (sorts moves by centrality and arrow proximity)
@@ -305,6 +316,16 @@ C++ version (4x faster):
 - **Features**: Dynamically adjusts time per move based on game phase and remaining time
 - **Goal**: Better time allocation for critical positions
 - **Status**: Created and compiled, initial testing shows TLE issues
+
+#### Bot009: Opponent.cpp Weight Integration
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS with opponent.cpp's sophisticated weight array
+- **Features**: Uses 28x6 weight array from opponent.cpp instead of EARLY/MID/LATE weights
+  - Turns 0-27: Use corresponding row from ARGS array
+  - Turns ≥28: Use last row (index 27) as fallback
+  - Uses only first 5 weights from each row (opponent.cpp has 6 components)
+- **Goal**: Leverage opponent.cpp's optimized weight tuning for better evaluation
+- **Status**: Created, compiled, and verified with basic testing
 
 ## Usage
 
