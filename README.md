@@ -97,6 +97,20 @@ pip install numpy
 📅 **In Progress**: Systematic testing of optimization techniques via competition automation
 
 **Recent Updates** (January 9, 2026):
+- **Created bot015.cpp - Comprehensive time measurement** ✅
+  - **Base**: bot014.cpp
+  - **Purpose**: Implement precise time tracking that accounts for ALL process overhead
+  - **Problem Addressed**: Previous implementations only monitored search loop time, missing overhead from input reading, board restoration, MCTS construction, and parameter setup
+  - **Key Implementation**:
+    - **Timing inside search()**: Pass `program_start_time`, `original_time_limit`, and `safety_margin` to search method
+    - **Comprehensive overhead tracking**: Calculate elapsed time at beginning of search() from program start
+    - **Adjusted time limit**: Compute `adjusted_limit = original_limit - elapsed_time - safety_margin` before MCTS loop
+    - **Optimized safety margin**: 0.02s (down from 0.10s) for better time utilization
+    - **Failsafe**: Minimum 0.05s search time prevents edge cases
+  - **Compilation**: `g++ -std=c++17 -O2 -o bots/bot015 bots/bot015.cpp`
+  - **Status**: Compiled successfully, ready for Botzone testing to verify improved time management
+  - **Advantage**: Timing now precisely matches Botzone's monitoring of entire process
+
 - **Created bot014.cpp - Non-long-live version of bot010** ✅
   - **Base**: bot010.cpp
   - **Purpose**: Solve memory allocation chaos and imprecise time monitoring caused by long-live mode

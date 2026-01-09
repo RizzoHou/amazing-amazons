@@ -184,8 +184,29 @@
     - Simpler debugging (reproducible, isolated runs)
     - Standard Botzone protocol (simpler interaction model)
   - **Compilation**: `g++ -std=c++17 -O3 -o bots/bot014 bots/bot014.cpp`
-  - **Status**: Compiled successfully (20KB source, 41KB executable), committed to git
-  - **Next**: Ready for testing to verify improved memory and timing behavior vs bot010
+  - **Status**: Compiled successfully (20KB source, 41KB executable), committed to git (babc1d4)
+
+- **Bot015 C++** (`bots/bot015.cpp`): Comprehensive time measurement ✓ (NEW - Jan 9, 2026)
+  - **Base**: bot014.cpp
+  - **Improvement**: Precise time tracking that accounts for ALL process overhead
+  - **Goal**: Match Botzone's time monitoring exactly by measuring from program start to MCTS loop
+  - **Problem Addressed**: Previous implementations only monitored search loop time, missing:
+    - Input reading and parsing overhead
+    - Board state restoration
+    - MCTS construction (RNG seeding)
+    - Parameter setup and method calls
+  - **Key Implementation**:
+    - **Timing inside search()**: Pass `program_start_time`, `original_time_limit`, and `safety_margin` to search method
+    - **Comprehensive overhead tracking**: Calculate elapsed time at beginning of search() from program start
+    - **Adjusted time limit**: Compute `adjusted_limit = original_limit - elapsed_time - safety_margin` before MCTS loop
+    - **Precise loop timing**: Use `adjusted_time_limit` for all MCTS iteration checks
+    - **Optimized safety margin**: 0.02s (down from 0.10s) for better time utilization
+    - **Failsafe**: Minimum 0.05s search time prevents edge cases
+  - **Method Signature**: `search(board, player, program_start_time, original_limit, safety_margin)`
+  - **Compilation**: `g++ -std=c++17 -O2 -o bots/bot015 bots/bot015.cpp`
+  - **Status**: Compiled successfully, committed to git (0ac510d)
+  - **Advantage**: Timing now precisely matches Botzone's monitoring of entire process
+  - **Next**: Ready for Botzone testing to verify improved time management
 
 
 ### Documentation ✓

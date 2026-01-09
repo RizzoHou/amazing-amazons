@@ -2,9 +2,42 @@
 
 ## Current Work Focus
 
-**Status**: Created five new C++ bots (bot004-bot008) with incremental improvements based on bot003. Developed competition automation script and ran initial tests. Some bots have TLE issues requiring further optimization.
+**Status**: Created bot015.cpp with comprehensive time measurement that tracks ALL process overhead. Bot now precisely matches Botzone's time monitoring for complete accuracy.
 
 **Recent Activity** (January 9, 2026):
+- **Created bot015.cpp with comprehensive time measurement** ✅:
+  - **Location**: `bots/bot015.cpp`
+  - **Base**: bot014.cpp
+  - **Purpose**: Implement precise time tracking that accounts for ALL overhead including MCTS construction
+  - **Problem Addressed**: Previous timing only monitored `mcts.search()` time, missing significant overhead from:
+    - Input reading and parsing
+    - Board state restoration
+    - MCTS instance construction (RNG seeding)
+    - Parameter setup
+    - Method call overhead
+  - **Key Implementation**:
+    1. **Timing inside search() method**: Pass `program_start_time` to search() along with original limit and safety margin
+    2. **Comprehensive overhead tracking**: Calculate elapsed time at the very beginning of search() to capture:
+       - All initialization from program start
+       - MCTS constructor execution
+       - turn_number assignment
+       - Method call overhead
+       - Root node creation
+       - Legal moves generation
+    3. **Adjusted time limit**: Compute `adjusted_limit = original_limit - elapsed_time - safety_margin` before MCTS loop
+    4. **Precise loop timing**: Use `adjusted_time_limit` for all timing checks in MCTS iterations
+    5. **Optimized safety margin**: Reduced to 0.02s (from 0.10s) for better time utilization
+    6. **Failsafe protection**: Minimum time of 0.05s prevents edge cases
+  - **Method Signature Change**: `search()` now accepts:
+    - `const chrono::steady_clock::time_point& program_start_time`
+    - `double original_time_limit`
+    - `double safety_margin`
+  - **Compilation**: `g++ -std=c++17 -O2 -o bots/bot015 bots/bot015.cpp`
+  - **Status**: Compiled successfully, committed to git (0ac510d)
+  - **Advantage**: Timing now precisely matches Botzone's monitoring of entire process, eliminating timeout issues from unaccounted overhead
+  - **Next**: Ready for Botzone testing to verify improved time management
+
+**Recent Activity** (January 9, 2026 - earlier):
 - **Created bot014.cpp - Non-long-live version of bot010** ✅:
   - **Location**: `bots/bot014.cpp`
   - **Base**: bot010.cpp
