@@ -6,8 +6,10 @@ Supports both enforced limits and unlimited (measurement-only) mode.
 """
 
 import os
+import sys
 import time
 import subprocess
+import resource
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from enum import Enum
@@ -233,6 +235,50 @@ class ResourceMonitor:
                     metrics.min_memory_turn = t.turn_number
         
         return metrics
+
+
+def get_child_max_memory() -> int:
+    """
+    Get maximum memory used by child processes.
+    
+    Uses resource.getrusage(RUSAGE_CHILDREN) which works after child exits.
+    This is useful for traditional bots that restart each turn.
+    
+    Note: ru_maxrss is in bytes on macOS, KB on Linux.
+    
+    Returns:
+        Maximum RSS memory in bytes used by child processes.
+    """
+    try:
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        if sys.platform == 'darwin':
+            # macOS: ru_maxrss is in bytes
+            return usage.ru_maxrss
+        else:
+            # Linux: ru_maxrss is in KB
+            return usage.ru_maxrss * 1024
+    except Exception:
+        return 0
+
+
+def reset_child_rusage():
+    """
+    Reset child resource usage tracking.
+    
+    Note: There's no direct way to reset RUSAGE_CHILDREN counters.
+    We just return the current value to be used as a baseline.
+    
+    Returns:
+        Current max RSS of child processes (to subtract later).
+    """
+    try:
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        if sys.platform == 'darwin':
+            return usage.ru_maxrss
+        else:
+            return usage.ru_maxrss * 1024
+    except Exception:
+        return 0
 
 
 def format_bytes(num_bytes: int) -> str:

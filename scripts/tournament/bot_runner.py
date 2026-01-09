@@ -17,7 +17,9 @@ from abc import ABC, abstractmethod
 from typing import Optional, List, Tuple
 from enum import Enum
 
-from .resource_monitor import ResourceMonitor, TurnMetrics, ViolationType
+from .resource_monitor import (
+    ResourceMonitor, TurnMetrics, ViolationType, get_child_max_memory
+)
 
 
 class BotType(Enum):
@@ -200,6 +202,9 @@ class TraditionalBot(BaseBotRunner):
                 elapsed = time.perf_counter() - start_time
                 self._kill_process()
                 
+                # Get memory from child process after it exits
+                memory = get_child_max_memory()
+                
                 # Record metrics
                 metrics = self.resource_monitor.measure_turn(
                     pid=pid,
@@ -207,12 +212,17 @@ class TraditionalBot(BaseBotRunner):
                     elapsed_time=elapsed,
                     is_first_turn=is_first_turn
                 )
+                metrics.memory_bytes = memory
                 metrics.violation = ViolationType.TIME_LIMIT_EXCEEDED
                 self.turn_metrics.append(metrics)
                 
                 return "", BotResult.TIMEOUT
             
             elapsed = time.perf_counter() - start_time
+            
+            # For traditional bots, get memory usage from child process stats
+            # since the process has already exited by now
+            memory = get_child_max_memory()
             
             # Record metrics
             metrics = self.resource_monitor.measure_turn(
@@ -221,6 +231,8 @@ class TraditionalBot(BaseBotRunner):
                 elapsed_time=elapsed,
                 is_first_turn=is_first_turn
             )
+            # Use child process memory (more accurate for traditional bots)
+            metrics.memory_bytes = memory
             self.turn_metrics.append(metrics)
             
             # Check for time violation
@@ -401,6 +413,22 @@ class LongLiveBot(BaseBotRunner):
                     self.turn_metrics.append(metrics)
                     return "", BotResult.TIMEOUT
                 else:
+                    self.turn_metrics.append(metrics)
+                    return "", BotResult.CRASH
+            
+            # Check if we accidentally read the keep-running signal from previous turn
+            # This can happen if the signal wasn't fully consumed on the previous turn
+            if move == ">>>BOTZONE_REQUEST_KEEP_RUNNING<<<":
+                # Read the actual move
+                move = self._read_line_with_timeout(read_timeout)
+                if move is None:
+                    elapsed = time.perf_counter() - start_time
+                    metrics = self.resource_monitor.measure_turn(
+                        pid=pid,
+                        turn_number=self.current_turn,
+                        elapsed_time=elapsed,
+                        is_first_turn=is_first_turn
+                    )
                     self.turn_metrics.append(metrics)
                     return "", BotResult.CRASH
             
