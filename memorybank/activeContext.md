@@ -2,9 +2,26 @@
 
 ## Current Work Focus
 
-**Status**: Created bot015.cpp with comprehensive time measurement that tracks ALL process overhead. Bot now precisely matches Botzone's time monitoring for complete accuracy.
+**Status**: Fixed tournament system issues - resolved keep-running signal buffering bug and added memory tracking for traditional bots.
 
-**Recent Activity** (January 9, 2026):
+**Recent Activity** (September 1, 2026):
+- **Fixed tournament system issues** ✅:
+  - **Issue 1 - Keep-running signal buffering**: LongLiveBot was reading stale `>>>BOTZONE_REQUEST_KEEP_RUNNING<<<` signals from previous turns as the move
+    - **Root cause**: The keep-running signal from turn N could remain in the buffer if not fully consumed, then be read as the "move" on turn N+2
+    - **Fix**: Modified `LongLiveBot.play_turn()` to detect when first line read is the keep-running signal and read the next line as the actual move
+    - **File modified**: `scripts/tournament/bot_runner.py`
+  - **Issue 2 - Missing memory stats for traditional bots**: bot015 (TraditionalBot) showed no memory statistics
+    - **Root cause**: `communicate()` blocks until process finishes, then `get_process_memory(pid)` fails because process is terminated
+    - **Fix**: Added `get_child_max_memory()` using `resource.getrusage(RUSAGE_CHILDREN)` which works after child exits
+    - **Files modified**: `scripts/tournament/resource_monitor.py`, `scripts/tournament/bot_runner.py`
+  - **Test Results**: 
+    - Game completed successfully (52 turns, bot010 wins by no_moves)
+    - bot015 now shows memory stats: Max memory 3.69 GB ✅
+    - bot010 memory stats: Max memory 4.33 GB ✅
+    - No invalid output errors
+  - **Git commit**: 3745134
+
+**Previous Activity** (January 9, 2026):
 - **Created bot015.cpp with comprehensive time measurement** ✅:
   - **Location**: `bots/bot015.cpp`
   - **Base**: bot014.cpp

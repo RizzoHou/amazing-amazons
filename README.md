@@ -96,7 +96,14 @@ pip install numpy
 ⚠️ **Blocked**: Bot002 has persistent TLE (Time Limit Exceeded) issue, awaiting expert consultation  
 📅 **In Progress**: Systematic testing of optimization techniques via competition automation
 
-**Recent Updates** (January 9, 2026):
+**Recent Updates** (September 1, 2026):
+- **Fixed tournament system issues** ✅
+  - **Issue 1 - Keep-running signal buffering**: Fixed `LongLiveBot` reading stale `>>>BOTZONE_REQUEST_KEEP_RUNNING<<<` signals from previous turns as the move
+  - **Issue 2 - Missing memory stats for traditional bots**: Added `get_child_max_memory()` using `resource.getrusage(RUSAGE_CHILDREN)` for post-process memory tracking
+  - **Test Results**: Games now complete properly with memory stats for both bot types
+  - **Files modified**: `scripts/tournament/bot_runner.py`, `scripts/tournament/resource_monitor.py`
+
+**Previous Updates** (January 9, 2026):
 - **Created bot015.cpp - Comprehensive time measurement** ✅
   - **Base**: bot014.cpp
   - **Purpose**: Implement precise time tracking that accounts for ALL process overhead

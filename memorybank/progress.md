@@ -409,12 +409,29 @@
   - Tests multiple turns and state management
   - Useful for debugging I/O issues
 
-- **Tournament system** (`scripts/tournament.py`): Bot comparison framework
-  - Runs matches between two bots
-  - Supports parallel game execution (10 parallel games default)
-  - Tracks win rates, time usage, game lengths
-  - Saves detailed results to JSON
-  - Command-line interface with customizable parameters
+- **Tournament system** (`scripts/tournament/`): Bot comparison framework ✓ (UPGRADED - Sep 1, 2026)
+  - **Modular design**: Separate modules for bot running, game engine, resource monitoring, analysis
+  - **Two bot types supported**:
+    - `TraditionalBot`: Restarts each turn with full history (bot015 style)
+    - `LongLiveBot`: Keep-running mode with incremental input (bot010 style)
+  - **Auto-detection**: Automatically detects bot type from behavior
+  - **Resource monitoring**: 
+    - Time tracking with configurable limits (2s first turn, 1s subsequent)
+    - Memory tracking using `resource.getrusage(RUSAGE_CHILDREN)` for traditional bots
+    - `ps` command for long-live bots
+    - `--unlimited` mode for testing without enforcement
+  - **Game analysis**:
+    - Detailed per-bot statistics (avg/max/min time, memory)
+    - Game reports with move history
+    - Tournament reports with aggregated stats
+  - **CLI interface**:
+    - `python -m scripts.tournament match bot1 bot2` - single match
+    - `python -m scripts.tournament tournament bot1 bot2 bot3` - round-robin
+    - Options: `--unlimited`, `--analyze`, `--report`, `--save`
+  - **Bug fixes** (Sep 1, 2026):
+    - Fixed keep-running signal buffering issue causing "invalid output" errors
+    - Fixed memory tracking for traditional bots using `resource.getrusage`
+  - **Files**: `bot_runner.py`, `game_engine.py`, `resource_monitor.py`, `game_analyzer.py`, `cli.py`
 
 - **Tournament Results** ✓ (Dec 10, 2025)
   - 50 games Python vs C++ completed successfully

@@ -498,7 +498,7 @@ public:
 
 const double TIME_LIMIT = 1.00;
 const double FIRST_TURN_TIME_LIMIT = 2.00;
-const double SAFETY_MARGIN = 0.10;  // Safety buffer to ensure we finish before timeout
+const double SAFETY_MARGIN = 0.50;  // Safety buffer to ensure we finish before timeout
 
 int main() {
     // Start timing immediately to track the entire process
