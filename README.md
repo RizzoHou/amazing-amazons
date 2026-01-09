@@ -97,6 +97,18 @@ pip install numpy
 📅 **In Progress**: Systematic testing of optimization techniques via competition automation
 
 **Recent Updates** (January 8, 2026):
+- **Created bot010.cpp with MCTS evaluation optimization** ✅
+  - **Base**: bot009.cpp
+  - **Improvement**: Eliminates heap allocations from evaluation function for 3-5x performance boost
+  - **Implementation**: 
+    - Static buffers (dist_my, dist_op arrays, FastQueue struct)
+    - perform_fast_bfs() replaces bfs_territory() with fixed arrays
+    - evaluate_optimized() replaces evaluate_multi_component() with single-pass scoring
+    - Removed STL containers from critical path (<deque>, <unordered_map>, <tuple>)
+  - **Compilation**: `g++ -std=c++11 -O3 -o bots/bot010 bots/bot010.cpp`
+  - **Expected Performance**: 3-5x increase in MCTS iterations per second
+  - **Status**: Compiled successfully, ready for performance testing
+
 - **Created bot009.cpp by integrating opponent.cpp weights into bot003** ✅
   - **Improvement**: Uses sophisticated 28x6 weight array from opponent.cpp instead of EARLY/MID/LATE weights
   - **Implementation**: 

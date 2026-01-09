@@ -5,6 +5,33 @@
 **Status**: Created five new C++ bots (bot004-bot008) with incremental improvements based on bot003. Developed competition automation script and ran initial tests. Some bots have TLE issues requiring further optimization.
 
 **Recent Activity** (January 8, 2026):
+- **Created bot010.cpp with MCTS evaluation optimization** ✅:
+  - **Location**: `bots/bot010.cpp`
+  - **Base**: bot009.cpp
+  - **Purpose**: Eliminate heap allocations from evaluation function to increase MCTS iteration count by 3-5x
+  - **Reference**: `docs/references/gemini/optimize_mcts_evaluation.md`
+  - **Implementation**:
+    1. **Added static optimization buffers**: 
+       - `dist_my[GRID_SIZE][GRID_SIZE]` and `dist_op[GRID_SIZE][GRID_SIZE]` for distance arrays
+       - `FastQueue` struct - lightweight fixed-size queue to replace `std::deque`
+    2. **Implemented `perform_fast_bfs()`**: 
+       - Replaces `bfs_territory()` with pointer-based, static-memory approach
+       - Uses fixed arrays instead of dynamic containers
+       - No heap allocations during BFS execution
+    3. **Implemented `evaluate_optimized()`**: 
+       - Replaces `evaluate_multi_component()` with single-pass scoring
+       - Pre-calculated powers-of-2 lookup table (avoids `pow()` calls)
+       - Maintains all 5 evaluation components with identical logic
+       - Single pass over board eliminates `std::unordered_map` usage
+    4. **Removed obsolete code**: 
+       - Deleted `bfs_territory()` function
+       - Deleted `calc_position_score()` function
+       - Removed unused headers: `<deque>`, `<unordered_map>`, `<tuple>`
+    5. **Updated MCTS::search()**: Changed evaluation call from `evaluate_multi_component()` to `evaluate_optimized()`
+  - **Compilation**: Compiled successfully with `g++ -std=c++11 -O3 -o bots/bot010 bots/bot010.cpp`
+  - **Expected Performance**: 3-5x increase in MCTS iterations per second due to zero heap allocations in evaluation path
+  - **Status**: Bot010 compiled and ready for testing against bot009
+
 - **Created bot009.cpp by integrating opponent.cpp weights into bot003** ✅:
   - **Location**: `bots/bot009.cpp`
   - **Purpose**: Create a new bot that uses the sophisticated weight array from opponent.cpp instead of the EARLY/MID/LATE weights in bot003

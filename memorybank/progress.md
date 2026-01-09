@@ -151,6 +151,24 @@
   - **Testing**: Verified with basic test input, produces valid moves
   - **Status**: Fully functional and ready for testing against other bots
 
+- **Bot010 C++** (`bots/bot010.cpp`): MCTS evaluation optimization ✓ (NEW - Jan 8, 2026)
+  - **Base**: bot009.cpp
+  - **Improvement**: Eliminates heap allocations from evaluation function for 3-5x performance boost
+  - **Goal**: Maximize MCTS iterations per second by removing STL container overhead
+  - **Reference**: `docs/references/gemini/optimize_mcts_evaluation.md`
+  - **Implementation**:
+    - **Static buffers**: Added `dist_my[][]`, `dist_op[][]` arrays and `FastQueue` struct
+    - **perform_fast_bfs()**: Replaced `bfs_territory()` with fixed-array BFS (no `std::deque`)
+    - **evaluate_optimized()**: Replaced `evaluate_multi_component()` with single-pass scoring
+      - Pre-calculated powers-of-2 lookup table (no `pow()` calls)
+      - Single board iteration (no `std::unordered_map`)
+      - Maintains all 5 evaluation components
+    - **Removed**: `bfs_territory()`, `calc_position_score()` functions
+    - **Removed headers**: `<deque>`, `<unordered_map>`, `<tuple>`
+  - **Compilation**: `g++ -std=c++11 -O3 -o bots/bot010 bots/bot010.cpp`
+  - **Expected Performance**: 3-5x increase in MCTS iterations/second (zero heap allocations in critical path)
+  - **Status**: Compiled successfully, ready for performance testing against bot009
+
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated
