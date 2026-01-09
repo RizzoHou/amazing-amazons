@@ -96,6 +96,19 @@ pip install numpy
 ⚠️ **Blocked**: Bot002 has persistent TLE (Time Limit Exceeded) issue, awaiting expert consultation  
 📅 **In Progress**: Systematic testing of optimization techniques via competition automation
 
+**Recent Updates** (January 9, 2026):
+- **Created bot014.cpp - Non-long-live version of bot010** ✅
+  - **Base**: bot010.cpp
+  - **Purpose**: Solve memory allocation chaos and imprecise time monitoring caused by long-live mode
+  - **Key Changes**:
+    - Removed long-live mode (no `>>>BOTZONE_REQUEST_KEEP_RUNNING<<<` output)
+    - Single-turn execution (bot exits after outputting move)
+    - No tree reuse (removed all `advance_root()` calls)
+    - Simplified main function for single-turn processing
+  - **Advantages**: Predictable memory usage, precise time monitoring, simpler debugging, standard Botzone protocol
+  - **Compilation**: `g++ -std=c++17 -O3 -o bots/bot014 bots/bot014.cpp`
+  - **Status**: Compiled successfully, ready for testing vs bot010
+
 **Recent Updates** (January 8, 2026):
 - **Created bot010.cpp with MCTS evaluation optimization** ✅
   - **Base**: bot009.cpp

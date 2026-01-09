@@ -6,8 +6,196 @@
 #include <chrono>
 #include <algorithm>
 #include <sstream>
+#include <fstream>
+#include <iomanip>
+#include <ctime>
 
 using namespace std;
+
+// --- LOGGING MODULE ---
+
+// Global log file streams
+static ofstream log_stream;           // For search iterations
+static ofstream turn_log_stream;      // For turn cycle phases
+static bool log_initialized = false;
+static bool turn_log_initialized = false;
+static string log_filename;
+static string turn_log_filename;
+
+// Initialize search logging with timestamp
+void init_logging() {
+    if (log_initialized) return;
+    
+    // Generate timestamp for filename
+    auto now = chrono::system_clock::now();
+    auto now_time_t = chrono::system_clock::to_time_t(now);
+    auto now_ms = chrono::duration_cast<chrono::milliseconds>(
+        now.time_since_epoch()
+    ) % 1000;
+    
+    stringstream ss;
+    ss << "logs/bot010_time_log_";
+    ss << put_time(localtime(&now_time_t), "%Y%m%d_%H%M%S");
+    ss << "_" << setfill('0') << setw(3) << now_ms.count();
+    ss << ".txt";
+    
+    log_filename = ss.str();
+    
+    // Open log file
+    log_stream.open(log_filename, ios::out | ios::app);
+    if (!log_stream.is_open()) {
+        // Try to create logs directory if it doesn't exist
+        system("mkdir -p logs 2>/dev/null");
+        log_stream.open(log_filename, ios::out | ios::app);
+    }
+    
+    if (log_stream.is_open()) {
+        log_initialized = true;
+        // Write header
+        log_stream << "# Bot010 Time Cost Log" << endl;
+        log_stream << "# Format: timestamp,turn_number,iterations_so_far,elapsed_time_seconds,cumulative_iterations" << endl;
+        log_stream << "# Created: " << put_time(localtime(&now_time_t), "%Y-%m-%d %H:%M:%S") << endl;
+        log_stream.flush();
+    }
+}
+
+// Initialize turn cycle logging with timestamp
+void init_turn_logging() {
+    if (turn_log_initialized) return;
+    
+    // Generate timestamp for filename
+    auto now = chrono::system_clock::now();
+    auto now_time_t = chrono::system_clock::to_time_t(now);
+    auto now_ms = chrono::duration_cast<chrono::milliseconds>(
+        now.time_since_epoch()
+    ) % 1000;
+    
+    stringstream ss;
+    ss << "logs/bot010_turn_cycle_log_";
+    ss << put_time(localtime(&now_time_t), "%Y%m%d_%H%M%S");
+    ss << "_" << setfill('0') << setw(3) << now_ms.count();
+    ss << ".txt";
+    
+    turn_log_filename = ss.str();
+    
+    // Open log file
+    turn_log_stream.open(turn_log_filename, ios::out | ios::app);
+    if (!turn_log_stream.is_open()) {
+        // Try to create logs directory if it doesn't exist
+        system("mkdir -p logs 2>/dev/null");
+        turn_log_stream.open(turn_log_filename, ios::out | ios::app);
+    }
+    
+    if (turn_log_stream.is_open()) {
+        turn_log_initialized = true;
+        // Write header
+        turn_log_stream << "# Bot010 Turn Cycle Log" << endl;
+        turn_log_stream << "# Format: timestamp,turn_number,phase,phase_time_seconds,cumulative_time_seconds,notes" << endl;
+        turn_log_stream << "# Created: " << put_time(localtime(&now_time_t), "%Y-%m-%d %H:%M:%S") << endl;
+        turn_log_stream.flush();
+    }
+}
+
+// Log time cost for current iteration
+void log_time_cost(int turn_number, int iterations, double elapsed_time, int cumulative_iterations) {
+    if (!log_initialized) init_logging();
+    if (!log_stream.is_open()) return;
+    
+    auto now = chrono::system_clock::now();
+    auto now_time_t = chrono::system_clock::to_time_t(now);
+    auto now_ms = chrono::duration_cast<chrono::milliseconds>(
+        now.time_since_epoch()
+    ) % 1000;
+    
+    log_stream << put_time(localtime(&now_time_t), "%Y-%m-%dT%H:%M:%S");
+    log_stream << "." << setfill('0') << setw(3) << now_ms.count();
+    log_stream << "," << turn_number;
+    log_stream << "," << iterations;
+    log_stream << "," << fixed << setprecision(6) << elapsed_time;
+    log_stream << "," << cumulative_iterations;
+    log_stream << endl;
+    log_stream.flush();
+}
+
+// Log final search results
+void log_final_results(int turn_number, double total_time, int total_iterations, double time_limit, bool is_first_turn) {
+    if (!log_initialized) init_logging();
+    if (!log_stream.is_open()) return;
+    
+    auto now = chrono::system_clock::now();
+    auto now_time_t = chrono::system_clock::to_time_t(now);
+    auto now_ms = chrono::duration_cast<chrono::milliseconds>(
+        now.time_since_epoch()
+    ) % 1000;
+    
+    log_stream << put_time(localtime(&now_time_t), "%Y-%m-%dT%H:%M:%S");
+    log_stream << "." << setfill('0') << setw(3) << now_ms.count();
+    log_stream << "," << turn_number;
+    log_stream << ",FINAL";
+    log_stream << "," << fixed << setprecision(6) << total_time;
+    log_stream << "," << total_iterations;
+    log_stream << "," << time_limit;
+    log_stream << "," << (is_first_turn ? "FIRST" : "NORMAL");
+    log_stream << endl;
+    log_stream.flush();
+}
+
+// Log turn cycle phase
+void log_turn_phase(int turn_number, const string& phase, double phase_time, double cumulative_time, const string& notes = "") {
+    if (!turn_log_initialized) init_turn_logging();
+    if (!turn_log_stream.is_open()) return;
+    
+    auto now = chrono::system_clock::now();
+    auto now_time_t = chrono::system_clock::to_time_t(now);
+    auto now_ms = chrono::duration_cast<chrono::milliseconds>(
+        now.time_since_epoch()
+    ) % 1000;
+    
+    turn_log_stream << put_time(localtime(&now_time_t), "%Y-%m-%dT%H:%M:%S");
+    turn_log_stream << "." << setfill('0') << setw(3) << now_ms.count();
+    turn_log_stream << "," << turn_number;
+    turn_log_stream << "," << phase;
+    turn_log_stream << "," << fixed << setprecision(6) << phase_time;
+    turn_log_stream << "," << fixed << setprecision(6) << cumulative_time;
+    turn_log_stream << "," << notes;
+    turn_log_stream << endl;
+    turn_log_stream.flush();
+}
+
+// Helper class for timing turn phases
+class TurnTimer {
+private:
+    chrono::steady_clock::time_point turn_start;
+    chrono::steady_clock::time_point last_checkpoint;
+    int turn_number;
+    double cumulative_time;
+    
+public:
+    TurnTimer(int turn) : turn_number(turn), cumulative_time(0.0) {
+        turn_start = chrono::steady_clock::now();
+        last_checkpoint = turn_start;
+    }
+    
+    double checkpoint(const string& phase, const string& notes = "") {
+        auto now = chrono::steady_clock::now();
+        double phase_time = chrono::duration<double>(now - last_checkpoint).count();
+        cumulative_time += phase_time;
+        
+        log_turn_phase(turn_number, phase, phase_time, cumulative_time, notes);
+        
+        last_checkpoint = now;
+        return phase_time;
+    }
+    
+    double get_total_time() const {
+        auto now = chrono::steady_clock::now();
+        return chrono::duration<double>(now - turn_start).count();
+    }
+    
+    double get_cumulative_time() const {
+        return cumulative_time;
+    }
+};
 
 // --- GAME CONSTANTS & BOARD ---
 const int GRID_SIZE = 8;
@@ -404,10 +592,10 @@ public:
     }
     
     Move search(const Board& root_state, int root_player) {
-        // Create fresh root node (no tree reuse in non-long-live mode)
-        if (root) delete root;
-        root = new MCTSNode(nullptr, Move(), -root_player);
-        root->untried_moves = root_state.get_legal_moves(root_player);
+        if (root == nullptr) {
+            root = new MCTSNode(nullptr, Move(), -root_player);
+            root->untried_moves = root_state.get_legal_moves(root_player);
+        }
         
         auto start_time = chrono::steady_clock::now();
         int iterations = 0;
@@ -462,7 +650,20 @@ public:
             }
             
             iterations++;
+            
+            // Log every 1000 iterations
+            if (iterations % 1000 == 0) {
+                auto log_time = chrono::steady_clock::now();
+                double log_elapsed = chrono::duration<double>(log_time - start_time).count();
+                log_time_cost(turn_number, iterations, log_elapsed, iterations);
+            }
         }
+        
+        // Log final results
+        auto end_time = chrono::steady_clock::now();
+        double total_elapsed = chrono::duration<double>(end_time - start_time).count();
+        bool is_first_turn = (turn_number == 1);
+        log_final_results(turn_number, total_elapsed, iterations, time_limit, is_first_turn);
         
         if (root->children.empty()) {
             return Move(-1, -1, -1, -1, -1, -1);
@@ -480,21 +681,57 @@ public:
         
         return best_node->move;
     }
+    
+    void advance_root(const Move& move) {
+        if (root == nullptr) return;
+        
+        MCTSNode* new_root = nullptr;
+        for (auto child : root->children) {
+            if (child->move == move) {
+                new_root = child;
+                break;
+            }
+        }
+        
+        if (new_root != nullptr) {
+            // Remove new_root from children to prevent deletion
+            root->children.erase(
+                remove(root->children.begin(), root->children.end(), new_root),
+                root->children.end()
+            );
+            delete root;  // This will delete all other children
+            root = new_root;
+            root->parent = nullptr;
+        } else {
+            delete root;
+            root = nullptr;
+        }
+    }
 };
 
 // --- MAIN MODULE ---
 
-const double TIME_LIMIT = 0.98;
-const double FIRST_TURN_TIME_LIMIT = 1.98;
+const double TIME_LIMIT = 0.88;
+const double FIRST_TURN_TIME_LIMIT = 1.88;
 
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
     
-    Board board;
-    int my_color = 0;
+    // Initialize turn logging for first turn initialization
+    init_turn_logging();
     
-    // Read turn number
+    // First turn initialization timer
+    TurnTimer init_timer(0);  // Turn 0 for initialization
+    
+    Board board;
+    init_timer.checkpoint("BOARD_CREATE");
+    
+    int my_color = 0;
+    MCTS ai(TIME_LIMIT);
+    init_timer.checkpoint("MCTS_CREATE");
+    
+    // First turn
     string line;
     if (!getline(cin, line)) return 0;
     
@@ -505,7 +742,8 @@ int main() {
         return 0;
     }
     
-    // Read history: 2 * turn_id - 1 lines
+    init_timer.checkpoint("TURN_ID_PARSE", "turn_id=" + to_string(turn_id));
+    
     vector<string> lines;
     int count = 2 * turn_id - 1;
     for (int i = 0; i < count; i++) {
@@ -514,7 +752,9 @@ int main() {
         lines.push_back(l);
     }
     
-    // Determine color from first request
+    init_timer.checkpoint("INPUT_READING", "lines=" + to_string(lines.size()));
+    
+    // Determine color
     istringstream iss(lines[0]);
     vector<int> first_req;
     int val;
@@ -526,7 +766,9 @@ int main() {
         my_color = WHITE;
     }
     
-    // Replay all moves to restore board state
+    init_timer.checkpoint("COLOR_DETERMINATION", "color=" + to_string(my_color));
+    
+    // Replay moves
     for (const string& line_str : lines) {
         istringstream iss2(line_str);
         vector<int> coords;
@@ -537,24 +779,128 @@ int main() {
         
         Move m(coords[0], coords[1], coords[2], coords[3], coords[4], coords[5]);
         board.apply_move(m);
+        ai.advance_root(m);
     }
     
-    // Create MCTS and search for best move
-    double limit = (turn_id == 1) ? FIRST_TURN_TIME_LIMIT : TIME_LIMIT;
-    MCTS ai(limit);
+    init_timer.checkpoint("MOVE_REPLAY", "moves_replayed=" + to_string(lines.size()));
+    
+    // Set turn number
     ai.turn_number = turn_id;
+    
+    double limit = (turn_id == 1) ? FIRST_TURN_TIME_LIMIT : TIME_LIMIT;
+    ai.time_limit = limit;
+    
+    init_timer.checkpoint("TURN_SETUP", "time_limit=" + to_string(limit));
+    
+    // Log initialization complete
+    init_timer.checkpoint("INIT_COMPLETE");
+    
+    // Start turn 1 timer
+    TurnTimer turn_timer(turn_id);
     
     Move best_move = ai.search(board, my_color);
     
-    // Output the move
+    turn_timer.checkpoint("SEARCH_COMPLETE");
+    
     if (best_move.x0 != -1) {
         cout << best_move.x0 << " " << best_move.y0 << " " 
              << best_move.x1 << " " << best_move.y1 << " "
              << best_move.x2 << " " << best_move.y2 << endl;
+        
+        turn_timer.checkpoint("OUTPUT_GENERATION");
+        
+        board.apply_move(best_move);
+        turn_timer.checkpoint("BOARD_UPDATE_SELF");
+        
+        ai.advance_root(best_move);
+        turn_timer.checkpoint("ADVANCE_ROOT_SELF");
     } else {
         cout << "-1 -1 -1 -1 -1 -1" << endl;
+        turn_timer.checkpoint("NO_MOVE_OUTPUT");
+        return 0;
     }
     
-    // Exit cleanly (NO long-live mode, NO keep running command)
+    cout << ">>>BOTZONE_REQUEST_KEEP_RUNNING<<<" << endl;
+    cout.flush();
+    
+    turn_timer.checkpoint("KEEP_RUNNING_SENT");
+    
+    // Subsequent turns
+    while (true) {
+        try {
+            // Start new turn timer
+            TurnTimer turn_timer(ai.turn_number + 1);  // +1 because turn_number hasn't been incremented yet
+            
+            Move opponent_move;
+            bool found = false;
+            
+            while (true) {
+                string line;
+                if (!getline(cin, line)) return 0;
+                
+                istringstream iss(line);
+                vector<int> parts;
+                int v;
+                while (iss >> v) parts.push_back(v);
+                
+                if (parts.size() == 6) {
+                    opponent_move = Move(parts[0], parts[1], parts[2], 
+                                        parts[3], parts[4], parts[5]);
+                    found = true;
+                    break;
+                } else if (parts.size() == 1) {
+                    continue;
+                } else {
+                    continue;
+                }
+            }
+            
+            turn_timer.checkpoint("INPUT_PARSING");
+            
+            if (found) {
+                board.apply_move(opponent_move);
+                turn_timer.checkpoint("BOARD_UPDATE_OPP");
+                
+                ai.advance_root(opponent_move);
+                turn_timer.checkpoint("ADVANCE_ROOT_OPP");
+            }
+            
+            ai.turn_number++;
+            ai.time_limit = TIME_LIMIT;
+            
+            turn_timer.checkpoint("TURN_INCREMENT");
+            
+            best_move = ai.search(board, my_color);
+            
+            turn_timer.checkpoint("SEARCH_COMPLETE");
+            
+            if (best_move.x0 != -1) {
+                cout << best_move.x0 << " " << best_move.y0 << " " 
+                     << best_move.x1 << " " << best_move.y1 << " "
+                     << best_move.x2 << " " << best_move.y2 << endl;
+                
+                turn_timer.checkpoint("OUTPUT_GENERATION");
+                
+                board.apply_move(best_move);
+                turn_timer.checkpoint("BOARD_UPDATE_SELF");
+                
+                ai.advance_root(best_move);
+                turn_timer.checkpoint("ADVANCE_ROOT_SELF");
+            } else {
+                cout << "-1 -1 -1 -1 -1 -1" << endl;
+                turn_timer.checkpoint("NO_MOVE_OUTPUT");
+                break;
+            }
+            
+            cout << ">>>BOTZONE_REQUEST_KEEP_RUNNING<<<" << endl;
+            cout.flush();
+            
+            turn_timer.checkpoint("KEEP_RUNNING_SENT");
+            
+        } catch (...) {
+            break;
+        }
+    }
+    
     return 0;
 }

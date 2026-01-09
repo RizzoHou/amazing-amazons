@@ -169,6 +169,24 @@
   - **Expected Performance**: 3-5x increase in MCTS iterations/second (zero heap allocations in critical path)
   - **Status**: Compiled successfully, ready for performance testing against bot009
 
+- **Bot014 C++** (`bots/bot014.cpp`): Non-long-live version of bot010 ✓ (NEW - Jan 9, 2026)
+  - **Base**: bot010.cpp
+  - **Improvement**: Removes long-live mode for cleaner memory and timing behavior
+  - **Goal**: Solve memory allocation chaos and imprecise time monitoring caused by tree reuse
+  - **Key Changes**:
+    - **No long-live mode**: Removed `>>>BOTZONE_REQUEST_KEEP_RUNNING<<<` output
+    - **Single-turn execution**: Bot exits after outputting move (no continuous loop)
+    - **No tree reuse**: Removed all `advance_root()` calls - fresh MCTS tree each turn
+    - **Simplified main**: Reads history, reconstructs state, searches once, outputs, exits
+  - **Advantages**:
+    - Predictable memory usage (no accumulated tree growth)
+    - Precise time monitoring (independent runs, no hidden overhead)
+    - Simpler debugging (reproducible, isolated runs)
+    - Standard Botzone protocol (simpler interaction model)
+  - **Compilation**: `g++ -std=c++17 -O3 -o bots/bot014 bots/bot014.cpp`
+  - **Status**: Compiled successfully (20KB source, 41KB executable), committed to git
+  - **Next**: Ready for testing to verify improved memory and timing behavior vs bot010
+
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated
