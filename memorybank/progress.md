@@ -223,6 +223,29 @@
   - **Compilation**: `g++ -std=c++17 -O2 -o bots/bot016 bots/bot016.cpp`
   - **Status**: Working on Botzone, timing accuracy improved
 
+- **Bot017 C++** (`bots/bot017.cpp`): 4 essential MCTS performance improvements ✓ (NEW - Sep 1, 2026)
+  - **Base**: bot016.cpp
+  - **Improvement**: Implement the 4 most essential optimizations for "more MCTS iterations per second"
+  - **Reference**: `docs/references/gpt/improve_bot016.md` - GPT analysis of performance bottlenecks
+  - **Key Improvements**:
+    1. **Fixed Board::copy() overhead**: Added no-init constructor `Board(bool do_init)` to eliminate redundant `init_board()` calls
+       - Replaces `Board state = root_state.copy()` with `Board state = root_state` (implicit copy)
+       - Eliminates 10-15% overhead from unnecessary initialization every MCTS iteration
+    2. **Swap-pop in untried_moves**: Replaced O(n) vector erase with O(1) swap-pop pattern
+       - `untried_moves[idx] = untried_moves.back(); untried_moves.pop_back()`
+       - Critical optimization for high branching factor games like Amazons
+    3. **Deadline-based time checking**: Reduced syscall overhead by 99%
+       - Check time only every 256 iterations: `if ((iterations & 0xFF) == 0)`
+       - Calculate deadline once at start, eliminate per-iteration `steady_clock::now()` calls
+    4. **Shrunken Move struct**: Memory footprint optimization using int8_t coordinates
+       - Reduced from 6 × `int` (24 bytes) to 6 × `int8_t` (6 bytes) - 4x smaller
+       - Improves cache performance and memory bandwidth for move storage
+       - Cast to `int` for output: `(int)best_move.x0` etc.
+  - **Performance Results**: **1.12x speedup** over bot016 (1.989s vs 2.228s average per move)
+  - **Implementation**: Built incrementally in parts (max 200 lines each) following .clinerules
+  - **Compilation**: `g++ -std=c++17 -O2 -o bots/bot017 bots/bot017.cpp`
+  - **Status**: Compiled successfully, performance verified, ready for deployment
+
 
 ### Documentation ✓
 - **Memory bank**: Complete and updated

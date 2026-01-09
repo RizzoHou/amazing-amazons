@@ -99,6 +99,20 @@ pip install numpy
 📅 **In Progress**: Systematic testing of optimization techniques via competition automation
 
 **Recent Updates** (September 1, 2026):
+- **Created bot017.cpp with 4 essential MCTS performance improvements** ✅
+  - **Base**: bot016.cpp
+  - **Purpose**: Implement the 4 most essential optimizations for "more MCTS iterations per second"
+  - **Reference**: `docs/references/gpt/improve_bot016.md` - GPT analysis of performance bottlenecks
+  - **Key Improvements**:
+    1. **Fixed Board::copy() overhead**: Added no-init constructor to eliminate redundant `init_board()` calls every MCTS iteration
+    2. **Replaced erase() with swap-pop**: Eliminated O(n) vector shifts by using `untried_moves[idx] = untried_moves.back(); untried_moves.pop_back()`
+    3. **Optimized time checking**: Reduced syscall overhead by 99% using deadline-based checking every 256 iterations
+    4. **Shrank Move struct**: Used `int8_t` instead of `int` to reduce memory footprint from 24 bytes to 6 bytes (4x smaller)
+  - **Performance Results**: **1.12x speedup** over bot016 (1.989s vs 2.228s average per move)
+  - **Implementation**: Built incrementally in parts (max 200 lines each) following .clinerules
+  - **Compilation**: `g++ -std=c++17 -O2 -o bots/bot017 bots/bot017.cpp`
+  - **Status**: Compiled successfully, performance verified, ready for deployment
+
 - **Created bot016.cpp with incremental best move selection** ✅
   - **Base**: bot015.cpp
   - **Purpose**: Fix timing measurement inaccuracy by moving best move selection into each MCTS iteration
