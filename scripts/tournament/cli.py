@@ -3,64 +3,151 @@
 Command-line interface for the tournament system.
 
 Provides commands for running matches, tournaments, tests, and compiling bots.
+
+Features:
+- Support for both long-live and traditional bots
+- Configurable time/memory limits
+- Unlimited mode for measuring actual resource usage
+- Game analysis and report generation
 """
 
 import argparse
 import sys
 import os
-from typing import List
+from typing import List, Optional
 
-from .game_engine import FixedGame
+from .game_engine import GameEngine, GameResult, GameEndReason
+from .bot_runner import BotType
+from .resource_monitor import ResourceMonitor
+from .game_analyzer import GameAnalyzer, print_game_analysis
 from .utils import compile_bot, bot_exists, get_bot_path
 
 
-def run_match(bot1_name: str, bot2_name: str, verbose: bool = True) -> bool:
+def run_match(
+    bot1_name: str,
+    bot2_name: str,
+    verbose: bool = True,
+    unlimited: bool = False,
+    analyze: bool = False,
+    save_result: bool = False,
+    generate_report: bool = False,
+    first_turn_time: float = 2.0,
+    turn_time: float = 1.0,
+    memory_limit: int = 256 * 1024 * 1024,
+    bot1_type: Optional[str] = None,
+    bot2_type: Optional[str] = None
+) -> Optional[GameResult]:
     """
     Run a single match between two bots.
     
     Args:
-        bot1_name: Name of first bot
-        bot2_name: Name of second bot
+        bot1_name: Name of first bot (Black)
+        bot2_name: Name of second bot (White)
         verbose: Whether to print detailed output
+        unlimited: If True, don't enforce limits (measurement only)
+        analyze: If True, print detailed analysis
+        save_result: If True, save result to JSON
+        generate_report: If True, generate markdown report
+        first_turn_time: Time limit for first turn (seconds)
+        turn_time: Time limit for subsequent turns (seconds)
+        memory_limit: Memory limit in bytes
+        bot1_type: Force bot type ('long_live', 'traditional', or None for auto)
+        bot2_type: Force bot type ('long_live', 'traditional', or None for auto)
     
     Returns:
-        True if match completed successfully, False otherwise
+        GameResult if match completed, None if setup failed
     """
     # Check if bots exist, compile if needed
     for bot_name in [bot1_name, bot2_name]:
         if not bot_exists(bot_name):
             if not compile_bot(bot_name):
                 print(f"✗ Cannot run match: {bot_name} compilation failed")
-                return False
+                return None
     
     bot1_path = get_bot_path(bot1_name)
     bot2_path = get_bot_path(bot2_name)
     
     if verbose:
         print("=" * 60)
-        print(f"Match: {bot1_name} vs {bot2_name}")
+        print(f"Match: {bot1_name} (Black) vs {bot2_name} (White)")
+        if unlimited:
+            print("Mode: UNLIMITED (no enforcement, measurement only)")
+        else:
+            print(f"Time limits: {first_turn_time}s (first), {turn_time}s (other)")
+            print(f"Memory limit: {memory_limit // (1024*1024)} MB")
         print("=" * 60)
     
-    game = FixedGame([bot1_path], [bot2_path], bot1_name, bot2_name)
-    winner, moves = game.play()
+    # Create resource monitor
+    resource_monitor = ResourceMonitor(
+        first_turn_time=first_turn_time,
+        turn_time=turn_time,
+        memory_limit=memory_limit,
+        enforce_limits=not unlimited
+    )
     
-    if game.error:
+    # Parse bot types
+    b1_type = _parse_bot_type(bot1_type)
+    b2_type = _parse_bot_type(bot2_type)
+    
+    # Create and run game
+    engine = GameEngine(
+        bot1_path, bot2_path,
+        bot1_name, bot2_name,
+        resource_monitor=resource_monitor,
+        verbose=verbose,
+        bot1_type=b1_type,
+        bot2_type=b2_type
+    )
+    
+    result = engine.play()
+    
+    # Post-game analysis
+    if analyze:
+        print_game_analysis(result)
+    
+    # Save results
+    analyzer = GameAnalyzer()
+    
+    if save_result:
+        filepath = analyzer.save_game_result(result)
         if verbose:
-            print(f"\n✗ Match error: {game.error}")
-        return False
-    else:
+            print(f"\n✓ Result saved to: {filepath}")
+    
+    if generate_report:
+        filepath = analyzer.generate_game_report(result)
         if verbose:
-            print(f"\n✓ Match completed: {winner} wins in {len(moves)} moves")
-        return True
+            print(f"✓ Report saved to: {filepath}")
+    
+    # Print summary
+    if verbose:
+        if result.winner:
+            print(f"\n✓ Match completed: {result.winner} wins ({result.end_reason.value})")
+        else:
+            print(f"\n✗ Match ended without winner ({result.end_reason.value})")
+    
+    return result
 
 
-def run_tournament(bot_names: List[str], verbose: bool = True) -> bool:
+def run_tournament(
+    bot_names: List[str],
+    verbose: bool = True,
+    unlimited: bool = False,
+    generate_report: bool = True,
+    first_turn_time: float = 2.0,
+    turn_time: float = 1.0,
+    memory_limit: int = 256 * 1024 * 1024
+) -> bool:
     """
     Run a round-robin tournament between multiple bots.
     
     Args:
         bot_names: List of bot names
         verbose: Whether to print detailed output
+        unlimited: If True, don't enforce limits
+        generate_report: If True, generate tournament report
+        first_turn_time: Time limit for first turn
+        turn_time: Time limit for other turns
+        memory_limit: Memory limit in bytes
     
     Returns:
         True if tournament completed successfully, False otherwise
@@ -75,52 +162,84 @@ def run_tournament(bot_names: List[str], verbose: bool = True) -> bool:
     if verbose:
         print("=" * 60)
         print(f"Tournament: {' vs '.join(bot_names)}")
+        if unlimited:
+            print("Mode: UNLIMITED (no enforcement)")
+        else:
+            print(f"Time limits: {first_turn_time}s / {turn_time}s")
         print("=" * 60)
     
-    # Simple round-robin: each bot plays each other bot once
-    results = {}
-    for bot in bot_names:
-        results[bot] = {"wins": 0, "losses": 0, "errors": 0}
+    # Run round-robin matches
+    results: List[GameResult] = []
+    match_num = 0
+    total_matches = len(bot_names) * (len(bot_names) - 1) // 2
     
     for i, bot1 in enumerate(bot_names):
         for j, bot2 in enumerate(bot_names):
-            if i >= j:  # Skip self-play and duplicate matches
+            if i >= j:  # Skip self-play and duplicates
                 continue
             
+            match_num += 1
             if verbose:
                 print(f"\n{'='*40}")
-                print(f"Match {i*len(bot_names) + j + 1}: {bot1} vs {bot2}")
+                print(f"Match {match_num}/{total_matches}: {bot1} vs {bot2}")
                 print(f"{'='*40}")
             
-            bot1_path = get_bot_path(bot1)
-            bot2_path = get_bot_path(bot2)
+            result = run_match(
+                bot1, bot2,
+                verbose=verbose,
+                unlimited=unlimited,
+                analyze=False,
+                save_result=False,
+                generate_report=False,
+                first_turn_time=first_turn_time,
+                turn_time=turn_time,
+                memory_limit=memory_limit
+            )
             
-            game = FixedGame([bot1_path], [bot2_path], bot1, bot2)
-            winner, moves = game.play()
-            
-            if game.error:
-                results[bot1]["errors"] += 1
-                results[bot2]["errors"] += 1
-                if verbose:
-                    print(f"✗ Match error: {game.error}")
-            else:
-                if winner == bot1:
-                    results[bot1]["wins"] += 1
-                    results[bot2]["losses"] += 1
-                else:
-                    results[bot2]["wins"] += 1
-                    results[bot1]["losses"] += 1
+            if result:
+                results.append(result)
     
-    # Print tournament results
+    # Generate tournament report
+    if generate_report and results:
+        analyzer = GameAnalyzer()
+        filepath = analyzer.generate_tournament_report(
+            results,
+            tournament_name=f"Tournament: {' vs '.join(bot_names)}"
+        )
+        if verbose:
+            print(f"\n✓ Tournament report saved to: {filepath}")
+    
+    # Print summary
     if verbose:
         print("\n" + "=" * 60)
-        print("TOURNAMENT RESULTS")
+        print("TOURNAMENT SUMMARY")
         print("=" * 60)
-        for bot in sorted(bot_names, key=lambda x: results[x]["wins"], reverse=True):
-            res = results[bot]
-            print(f"{bot}: {res['wins']} wins, {res['losses']} losses, {res['errors']} errors")
+        
+        # Count wins
+        wins = {}
+        for bot in bot_names:
+            wins[bot] = sum(1 for r in results if r.winner == bot)
+        
+        # Sort by wins
+        sorted_bots = sorted(bot_names, key=lambda x: wins[x], reverse=True)
+        
+        for bot in sorted_bots:
+            w = wins[bot]
+            total = len([r for r in results if bot in [r.winner, r.loser]])
+            print(f"  {bot}: {w} wins / {total} games")
     
     return True
+
+
+def _parse_bot_type(type_str: Optional[str]) -> Optional[BotType]:
+    """Parse bot type string to BotType enum."""
+    if type_str is None:
+        return None
+    if type_str.lower() in ['long_live', 'longlive', 'long-live']:
+        return BotType.LONG_LIVE
+    if type_str.lower() in ['traditional', 'trad', 'standard']:
+        return BotType.TRADITIONAL
+    return None
 
 
 def run_test(test_name: str, verbose: bool = True) -> bool:
@@ -128,7 +247,7 @@ def run_test(test_name: str, verbose: bool = True) -> bool:
     Run a specific test.
     
     Args:
-        test_name: Name of test to run ('bot002' or 'bot000_vs_bot003')
+        test_name: Name of test to run
         verbose: Whether to print detailed output
     
     Returns:
@@ -138,94 +257,80 @@ def run_test(test_name: str, verbose: bool = True) -> bool:
         return test_bot002(verbose)
     elif test_name == "bot000_vs_bot003":
         return test_bot000_vs_bot003(verbose)
+    elif test_name == "bot015":
+        return test_traditional_bot(verbose)
     else:
         print(f"✗ Unknown test: {test_name}")
-        print("Available tests: bot002, bot000_vs_bot003")
+        print("Available tests: bot002, bot000_vs_bot003, bot015")
         return False
 
 
 def test_bot002(verbose: bool = True) -> bool:
-    """Test bot002 self-play to detect illegal movements or TLE"""
+    """Test bot002 self-play."""
     if verbose:
         print("\n" + "=" * 60)
-        print("Test: bot002 self-play (should detect illegal movements or TLE)")
+        print("Test: bot002 self-play")
         print("=" * 60)
     
-    if not bot_exists("bot002"):
-        if not compile_bot("bot002"):
-            return False
-    
-    bot002_path = get_bot_path("bot002")
-    game = FixedGame([bot002_path], [bot002_path], "bot002 (Black)", "bot002 (White)")
-    winner, moves = game.play()
-    
-    if game.error:
-        if verbose:
-            print(f"✓ Test passed: Detected issue in bot002 self-play: {game.error}")
-        return True
-    elif "illegal" in str(game.error).lower() or "invalid" in str(game.error).lower() or "tle" in str(game.error).lower():
-        if verbose:
-            print(f"✓ Test passed: Detected illegal/invalid move or TLE in bot002")
-        return True
-    else:
-        if verbose:
-            print(f"✗ Test may have failed: No issues detected in bot002 self-play")
-            print(f"  Winner: {winner}, Moves: {len(moves)}")
-        return False
+    result = run_match("bot002", "bot002", verbose=verbose, analyze=True)
+    return result is not None
 
 
 def test_bot000_vs_bot003(verbose: bool = True) -> bool:
-    """Test bot000 vs bot003 for reliability"""
+    """Test bot000 vs bot003."""
     if verbose:
         print("\n" + "=" * 60)
-        print("Test: bot000 vs bot003 (should be reliable)")
+        print("Test: bot000 vs bot003")
         print("=" * 60)
     
-    for bot_name in ["bot000", "bot003"]:
-        if not bot_exists(bot_name):
-            if not compile_bot(bot_name):
-                return False
+    result = run_match("bot000", "bot003", verbose=verbose, analyze=True)
+    return result is not None and result.winner is not None
+
+
+def test_traditional_bot(verbose: bool = True) -> bool:
+    """Test traditional (non-long-live) bot like bot015."""
+    if verbose:
+        print("\n" + "=" * 60)
+        print("Test: Traditional bot (bot015) vs Long-live bot (bot010)")
+        print("=" * 60)
     
-    bot000_path = get_bot_path("bot000")
-    bot003_path = get_bot_path("bot003")
-    
-    game = FixedGame([bot000_path], [bot003_path], "bot000", "bot003")
-    winner, moves = game.play()
-    
-    if game.error:
-        # Check if game played many moves before error (tournament system is working)
-        # Original bug: game always ended at exactly 20 moves with bot003 winning
-        # If we get to 20+ moves without that bug, tournament system fix is working
-        if len(moves) >= 20:
-            if verbose:
-                print(f"✓ Test passed: Tournament system working correctly")
-                print(f"  Game played {len(moves)} moves before bot issue: {game.error}")
-                print(f"  Note: Original bug (always 20 moves, bot003 wins) is fixed")
-                print(f"  Current issue ({game.error}) is a bot problem, not tournament system")
-            return True
-        else:
-            if verbose:
-                print(f"✗ Test failed: Error in bot000 vs bot003: {game.error}")
-                print(f"  Only {len(moves)} moves played")
-            return False
-    else:
-        if verbose:
-            print(f"✓ Test passed: bot000 vs bot003 completed successfully")
-            print(f"  Winner: {winner}, Moves: {len(moves)}")
-        return True
+    # Force bot types to test mixed mode
+    result = run_match(
+        "bot015", "bot010",
+        verbose=verbose,
+        analyze=True,
+        bot1_type="traditional",
+        bot2_type="long_live"
+    )
+    return result is not None
 
 
 def main():
-    """Main CLI entry point"""
+    """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Botzone Amazons Tournament System",
+        description="Amazons Tournament System - Run bot matches with resource monitoring",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s match bot000 bot003      # Run a single match
-  %(prog)s tournament bot000 bot001 bot002  # Run tournament
-  %(prog)s test bot002              # Test bot002
-  %(prog)s compile bot003           # Compile bot003
+  %(prog)s match bot010 bot015                    # Run a single match
+  %(prog)s match bot010 bot015 --unlimited        # Run without time limits
+  %(prog)s match bot010 bot015 --analyze          # Run with detailed analysis
+  %(prog)s match bot010 bot015 --report           # Generate markdown report
+  
+  %(prog)s tournament bot010 bot014 bot015        # Run round-robin tournament
+  %(prog)s tournament bot003 bot010 --unlimited   # Tournament without limits
+  
+  %(prog)s test bot015                            # Test traditional bot support
+  %(prog)s compile bot015                         # Compile a bot
+  
+Bot Types:
+  - long_live: Bots using >>>BOTZONE_REQUEST_KEEP_RUNNING<<< (e.g., bot010)
+  - traditional: Bots that exit after each turn (e.g., bot015)
+  
+Time Limits (default Botzone):
+  - First turn: 2 seconds
+  - Other turns: 1 second
+  - Memory: 256 MB
         """
     )
     
@@ -233,24 +338,52 @@ Examples:
     
     # Match command
     match_parser = subparsers.add_parser("match", help="Run a single match")
-    match_parser.add_argument("bot1", help="First bot name")
-    match_parser.add_argument("bot2", help="Second bot name")
-    match_parser.add_argument("--quiet", action="store_true", help="Reduce output")
+    match_parser.add_argument("bot1", help="First bot name (plays Black)")
+    match_parser.add_argument("bot2", help="Second bot name (plays White)")
+    match_parser.add_argument("--quiet", "-q", action="store_true", help="Reduce output")
+    match_parser.add_argument("--unlimited", "-u", action="store_true",
+                             help="Don't enforce time/memory limits (measurement only)")
+    match_parser.add_argument("--analyze", "-a", action="store_true",
+                             help="Print detailed post-game analysis")
+    match_parser.add_argument("--save", "-s", action="store_true",
+                             help="Save result to JSON file")
+    match_parser.add_argument("--report", "-r", action="store_true",
+                             help="Generate markdown report")
+    match_parser.add_argument("--first-time", type=float, default=2.0,
+                             help="Time limit for first turn (default: 2.0s)")
+    match_parser.add_argument("--turn-time", type=float, default=1.0,
+                             help="Time limit for other turns (default: 1.0s)")
+    match_parser.add_argument("--memory", type=int, default=256,
+                             help="Memory limit in MB (default: 256)")
+    match_parser.add_argument("--bot1-type", choices=['long_live', 'traditional'],
+                             help="Force bot1 type (default: auto-detect)")
+    match_parser.add_argument("--bot2-type", choices=['long_live', 'traditional'],
+                             help="Force bot2 type (default: auto-detect)")
     
     # Tournament command
     tournament_parser = subparsers.add_parser("tournament", help="Run a tournament")
     tournament_parser.add_argument("bots", nargs="+", help="Bot names")
-    tournament_parser.add_argument("--quiet", action="store_true", help="Reduce output")
+    tournament_parser.add_argument("--quiet", "-q", action="store_true", help="Reduce output")
+    tournament_parser.add_argument("--unlimited", "-u", action="store_true",
+                                  help="Don't enforce time/memory limits")
+    tournament_parser.add_argument("--no-report", action="store_true",
+                                  help="Don't generate tournament report")
+    tournament_parser.add_argument("--first-time", type=float, default=2.0,
+                                  help="Time limit for first turn (default: 2.0s)")
+    tournament_parser.add_argument("--turn-time", type=float, default=1.0,
+                                  help="Time limit for other turns (default: 1.0s)")
+    tournament_parser.add_argument("--memory", type=int, default=256,
+                                  help="Memory limit in MB (default: 256)")
     
     # Test command
     test_parser = subparsers.add_parser("test", help="Run a test")
-    test_parser.add_argument("test_name", help="Test name (bot002 or bot000_vs_bot003)")
-    test_parser.add_argument("--quiet", action="store_true", help="Reduce output")
+    test_parser.add_argument("test_name", help="Test name (bot002, bot000_vs_bot003, bot015)")
+    test_parser.add_argument("--quiet", "-q", action="store_true", help="Reduce output")
     
     # Compile command
     compile_parser = subparsers.add_parser("compile", help="Compile a bot")
     compile_parser.add_argument("bot_name", help="Bot name to compile")
-    compile_parser.add_argument("--source", help="Path to source file (default: bots/{bot_name}.cpp)")
+    compile_parser.add_argument("--source", help="Path to source file")
     
     args = parser.parse_args()
     
@@ -262,11 +395,31 @@ Examples:
     
     try:
         if args.command == "match":
-            success = run_match(args.bot1, args.bot2, verbose)
-            return 0 if success else 1
+            result = run_match(
+                args.bot1, args.bot2,
+                verbose=verbose,
+                unlimited=args.unlimited,
+                analyze=args.analyze,
+                save_result=args.save,
+                generate_report=args.report,
+                first_turn_time=args.first_time,
+                turn_time=args.turn_time,
+                memory_limit=args.memory * 1024 * 1024,
+                bot1_type=args.bot1_type,
+                bot2_type=args.bot2_type
+            )
+            return 0 if result and result.winner else 1
             
         elif args.command == "tournament":
-            success = run_tournament(args.bots, verbose)
+            success = run_tournament(
+                args.bots,
+                verbose=verbose,
+                unlimited=args.unlimited,
+                generate_report=not args.no_report,
+                first_turn_time=args.first_time,
+                turn_time=args.turn_time,
+                memory_limit=args.memory * 1024 * 1024
+            )
             return 0 if success else 1
             
         elif args.command == "test":
