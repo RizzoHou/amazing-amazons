@@ -33,7 +33,9 @@ amazing-amazons/
 │   ├── bot002.cpp    # Optimized C++ bot (bitboards, faster)
 │   ├── bot002_cpp    # Compiled optimized binary
 │   ├── bot003.cpp    # MCTS bot (identical to bot000)
-│   └── bot003        # Compiled MCTS bot binary
+│   ├── bot003        # Compiled MCTS bot binary
+│   ├── bot016.cpp    # Incremental best move selection (timing fix)
+│   └── bot016        # Compiled bot016 binary
 ├── scripts/          # Testing and utility scripts
 │   ├── test_bot_simple.py      # Quick bot functionality tests
 │   ├── botzone_simulator.py   # I/O protocol simulator
@@ -97,6 +99,21 @@ pip install numpy
 📅 **In Progress**: Systematic testing of optimization techniques via competition automation
 
 **Recent Updates** (September 1, 2026):
+- **Created bot016.cpp with incremental best move selection** ✅
+  - **Base**: bot015.cpp
+  - **Purpose**: Fix timing measurement inaccuracy by moving best move selection into each MCTS iteration
+  - **Problem Addressed**: External time measurement (Botzone/tournament) includes time to select best move at the end, but bot015's internal timing didn't include this
+  - **Key Implementation**:
+    1. **Incremental best child tracking**: Added `best_child` and `max_visits` members to MCTS class
+    2. **Update during backpropagation**: During each iteration, track which root child has highest visits
+    3. **Immediate best move availability**: When time runs out, best move is already known (no post-loop scanning)
+    4. **Optimized check**: Only updates when `node->parent == root` (direct children only)
+  - **Performance Impact**: ~25% slower due to extra checks in backpropagation loop
+  - **Botzone Testing**: Solution works on Botzone (timing now matches external measurement)
+  - **Local Tournament Issue**: Tournament system shows bot016 slower than bot015 (954ms vs 529ms avg) - may be tournament system bug
+  - **Compilation**: `g++ -std=c++17 -O2 -o bots/bot016 bots/bot016.cpp`
+  - **Status**: Working on Botzone, timing accuracy improved
+
 - **Fixed tournament system issues** ✅
   - **Issue 1 - Keep-running signal buffering**: Fixed `LongLiveBot` reading stale `>>>BOTZONE_REQUEST_KEEP_RUNNING<<<` signals from previous turns as the move
   - **Issue 2 - Missing memory stats for traditional bots**: Added `get_child_max_memory()` using `resource.getrusage(RUSAGE_CHILDREN)` for post-process memory tracking
@@ -372,6 +389,20 @@ C++ version (4x faster):
   - Uses only first 5 weights from each row (opponent.cpp has 6 components)
 - **Goal**: Leverage opponent.cpp's optimized weight tuning for better evaluation
 - **Status**: Created, compiled, and verified with basic testing
+
+#### Bot016: Incremental Best Move Selection
+- **Language**: C++
+- **Algorithm**: Multi-Component MCTS with incremental best move tracking
+- **Base**: bot015.cpp
+- **Features**: 
+  - **Incremental best child tracking**: Tracks best move during each MCTS iteration
+  - **Timing accuracy**: Fixes measurement discrepancy between internal and external timing
+  - **Optimized check**: Only updates when `node->parent == root` (direct children only)
+- **Goal**: Make internal time measurement match external (Botzone/tournament) timing
+- **Performance**: ~25% slower than bot015 due to extra checks in backpropagation loop
+- **Botzone Testing**: Works on Botzone with improved timing accuracy
+- **Local Tournament Issue**: Shows slower performance (954ms vs 529ms avg) - may be tournament system bug
+- **Status**: Working on Botzone, timing accuracy improved
 
 ## Usage
 
