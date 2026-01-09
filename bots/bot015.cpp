@@ -486,8 +486,12 @@ public:
 
 const double TIME_LIMIT = 0.98;
 const double FIRST_TURN_TIME_LIMIT = 1.98;
+const double SAFETY_MARGIN = 0.02;  // Safety buffer to ensure we finish before timeout
 
 int main() {
+    // Start timing immediately to track the entire process
+    auto program_start_time = chrono::steady_clock::now();
+    
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
     
@@ -539,9 +543,21 @@ int main() {
         board.apply_move(m);
     }
     
-    // Create MCTS and search for best move
-    double limit = (turn_id == 1) ? FIRST_TURN_TIME_LIMIT : TIME_LIMIT;
-    MCTS ai(limit);
+    // Calculate time spent on initialization (input reading, parsing, board restoration)
+    auto before_search_time = chrono::steady_clock::now();
+    double elapsed_time = chrono::duration<double>(before_search_time - program_start_time).count();
+    
+    // Adjust time limit to account for initialization overhead and add safety margin
+    double original_limit = (turn_id == 1) ? FIRST_TURN_TIME_LIMIT : TIME_LIMIT;
+    double adjusted_limit = original_limit - elapsed_time - SAFETY_MARGIN;
+    
+    // Ensure we have some minimum time to search (failsafe)
+    if (adjusted_limit < 0.1) {
+        adjusted_limit = 0.1;
+    }
+    
+    // Create MCTS and search for best move with adjusted time limit
+    MCTS ai(adjusted_limit);
     ai.turn_number = turn_id;
     
     Move best_move = ai.search(board, my_color);
