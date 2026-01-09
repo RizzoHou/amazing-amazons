@@ -403,21 +403,33 @@ public:
         return 1.0 / (1.0 + exp(-score));
     }
     
-    Move search(const Board& root_state, int root_player) {
+    Move search(const Board& root_state, int root_player, const chrono::steady_clock::time_point& program_start_time, double original_time_limit, double safety_margin) {
+        // Calculate actual elapsed time from program start to NOW
+        // This accounts for ALL overhead: input, parsing, board restoration, MCTS construction, etc.
+        auto search_start_time = chrono::steady_clock::now();
+        double elapsed_time = chrono::duration<double>(search_start_time - program_start_time).count();
+        
+        // Adjust time limit based on what we've already used
+        double adjusted_time_limit = original_time_limit - elapsed_time - safety_margin;
+        
+        // Failsafe: ensure we have some minimum time
+        if (adjusted_time_limit < 0.05) {
+            adjusted_time_limit = 0.05;
+        }
+        
         // Create fresh root node (no tree reuse in non-long-live mode)
         if (root) delete root;
         root = new MCTSNode(nullptr, Move(), -root_player);
         root->untried_moves = root_state.get_legal_moves(root_player);
         
-        auto start_time = chrono::steady_clock::now();
         int iterations = 0;
         
         double C = get_ucb_constant(turn_number);
         
         while (true) {
             auto current_time = chrono::steady_clock::now();
-            double elapsed = chrono::duration<double>(current_time - start_time).count();
-            if (elapsed >= time_limit) break;
+            double elapsed = chrono::duration<double>(current_time - search_start_time).count();
+            if (elapsed >= adjusted_time_limit) break;
             
             MCTSNode* node = root;
             Board state = root_state.copy();
@@ -484,8 +496,8 @@ public:
 
 // --- MAIN MODULE ---
 
-const double TIME_LIMIT = 0.98;
-const double FIRST_TURN_TIME_LIMIT = 1.98;
+const double TIME_LIMIT = 1.00;
+const double FIRST_TURN_TIME_LIMIT = 2.00;
 const double SAFETY_MARGIN = 0.02;  // Safety buffer to ensure we finish before timeout
 
 int main() {
@@ -543,24 +555,15 @@ int main() {
         board.apply_move(m);
     }
     
-    // Calculate time spent on initialization (input reading, parsing, board restoration)
-    auto before_search_time = chrono::steady_clock::now();
-    double elapsed_time = chrono::duration<double>(before_search_time - program_start_time).count();
-    
-    // Adjust time limit to account for initialization overhead and add safety margin
+    // Determine original time limit based on turn
     double original_limit = (turn_id == 1) ? FIRST_TURN_TIME_LIMIT : TIME_LIMIT;
-    double adjusted_limit = original_limit - elapsed_time - SAFETY_MARGIN;
     
-    // Ensure we have some minimum time to search (failsafe)
-    if (adjusted_limit < 0.1) {
-        adjusted_limit = 0.1;
-    }
-    
-    // Create MCTS and search for best move with adjusted time limit
-    MCTS ai(adjusted_limit);
+    // Create MCTS instance (timing will be handled inside search)
+    MCTS ai;
     ai.turn_number = turn_id;
     
-    Move best_move = ai.search(board, my_color);
+    // Search for best move - timing is calculated inside search() to account for ALL overhead
+    Move best_move = ai.search(board, my_color, program_start_time, original_limit, SAFETY_MARGIN);
     
     // Output the move
     if (best_move.x0 != -1) {
