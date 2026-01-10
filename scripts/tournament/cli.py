@@ -486,6 +486,8 @@ def run_profile(
     # Combine and sort by turn number
     # Bot1 (Black) plays on odd turns: internal turn 1 -> game turn 1, internal turn 2 -> game turn 3
     # Bot2 (White) plays on even turns: internal turn 1 -> game turn 2, internal turn 2 -> game turn 4
+    memory_limit_mb = memory_limit / (1024 * 1024)
+    
     for metrics in bot1_turns:
         game_turn = metrics.turn_number * 2 - 1  # Black plays on odd turns
         all_turn_data.append({
@@ -495,6 +497,7 @@ def run_profile(
             "time_seconds": metrics.time_seconds,
             "memory_bytes": metrics.memory_bytes,
             "memory_mb": metrics.memory_bytes / (1024 * 1024),
+            "memory_limit_mb": memory_limit_mb,
             "time_limit": metrics.time_limit,
             "is_first_turn": metrics.is_first_turn,
             "violation": metrics.violation.value
@@ -509,6 +512,7 @@ def run_profile(
             "time_seconds": metrics.time_seconds,
             "memory_bytes": metrics.memory_bytes,
             "memory_mb": metrics.memory_bytes / (1024 * 1024),
+            "memory_limit_mb": memory_limit_mb,
             "time_limit": metrics.time_limit,
             "is_first_turn": metrics.is_first_turn,
             "violation": metrics.violation.value
@@ -607,7 +611,7 @@ def run_profile(
     with open(output_csv, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=[
             "turn", "player", "move", "time_seconds", "memory_bytes", 
-            "memory_mb", "time_limit", "is_first_turn", "violation"
+            "memory_mb", "memory_limit_mb", "time_limit", "is_first_turn", "violation"
         ])
         writer.writeheader()
         writer.writerows(all_turn_data)
