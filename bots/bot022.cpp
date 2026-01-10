@@ -61,8 +61,8 @@ inline uint32_t fast_rand() {
 // We need a large pool for moves because Amazons has a huge branching factor.
 // 250k nodes * ~60 moves average = ~15 million moves.
 // 15M * 6 bytes = 90MB. Fits in 256MB easily.
-const int MAX_NODES = 500000;
-const int MAX_MOVES_POOL = 80000000; // 33000000
+const int MAX_NODES = 2500000;
+const int MAX_MOVES_POOL = 7000000; // 33000000
 
 class MCTSNode;
 
