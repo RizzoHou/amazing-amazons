@@ -155,7 +155,7 @@ class ResourceMonitor:
     Botzone limits:
     - First turn: 2 seconds
     - Subsequent turns: 1 second
-    - Memory: 256 MB
+    - Memory: 512 MB
     """
     
     # Default Botzone limits

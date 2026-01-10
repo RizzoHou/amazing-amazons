@@ -33,7 +33,7 @@ def run_match(
     generate_report: bool = False,
     first_turn_time: float = 2.0,
     turn_time: float = 1.0,
-    memory_limit: int = 256 * 1024 * 1024,
+    memory_limit: int = 512 * 1024 * 1024,
     bot1_type: Optional[str] = None,
     bot2_type: Optional[str] = None
 ) -> Optional[GameResult]:
@@ -138,7 +138,7 @@ def run_series(
     generate_report: bool = False,
     first_turn_time: float = 2.0,
     turn_time: float = 1.0,
-    memory_limit: int = 256 * 1024 * 1024,
+    memory_limit: int = 512 * 1024 * 1024,
     bot1_type: Optional[str] = None,
     bot2_type: Optional[str] = None
 ) -> bool:
@@ -287,7 +287,7 @@ def run_tournament(
     generate_report: bool = True,
     first_turn_time: float = 2.0,
     turn_time: float = 1.0,
-    memory_limit: int = 256 * 1024 * 1024
+    memory_limit: int = 512 * 1024 * 1024
 ) -> bool:
     """
     Run a round-robin tournament between multiple bots.
@@ -486,7 +486,7 @@ Bot Types:
 Time Limits (default Botzone):
   - First turn: 2 seconds
   - Other turns: 1 second
-  - Memory: 256 MB
+  - Memory: 512 MB
         """
     )
     
@@ -509,8 +509,8 @@ Time Limits (default Botzone):
                              help="Time limit for first turn (default: 2.0s)")
     match_parser.add_argument("--turn-time", type=float, default=1.0,
                              help="Time limit for other turns (default: 1.0s)")
-    match_parser.add_argument("--memory", type=int, default=256,
-                             help="Memory limit in MB (default: 256)")
+    match_parser.add_argument("--memory", type=int, default=512,
+                             help="Memory limit in MB (default: 512)")
     match_parser.add_argument("--bot1-type", choices=['long_live', 'traditional'],
                              help="Force bot1 type (default: auto-detect)")
     match_parser.add_argument("--bot2-type", choices=['long_live', 'traditional'],
@@ -533,8 +533,8 @@ Time Limits (default Botzone):
                               help="Time limit for first turn (default: 2.0s)")
     series_parser.add_argument("--turn-time", type=float, default=1.0,
                               help="Time limit for other turns (default: 1.0s)")
-    series_parser.add_argument("--memory", type=int, default=256,
-                              help="Memory limit in MB (default: 256)")
+    series_parser.add_argument("--memory", type=int, default=512,
+                              help="Memory limit in MB (default: 512)")
     series_parser.add_argument("--bot1-type", choices=['long_live', 'traditional'],
                               help="Force bot1 type (default: auto-detect)")
     series_parser.add_argument("--bot2-type", choices=['long_live', 'traditional'],
@@ -552,8 +552,8 @@ Time Limits (default Botzone):
                                   help="Time limit for first turn (default: 2.0s)")
     tournament_parser.add_argument("--turn-time", type=float, default=1.0,
                                   help="Time limit for other turns (default: 1.0s)")
-    tournament_parser.add_argument("--memory", type=int, default=256,
-                                  help="Memory limit in MB (default: 256)")
+    tournament_parser.add_argument("--memory", type=int, default=512,
+                                  help="Memory limit in MB (default: 512)")
     
     # Test command
     test_parser = subparsers.add_parser("test", help="Run a test")
