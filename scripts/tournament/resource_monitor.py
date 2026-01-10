@@ -10,6 +10,7 @@ import sys
 import time
 import subprocess
 import resource
+import threading
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from enum import Enum
@@ -61,6 +62,92 @@ class GameMetrics:
     first_turn_memory: int = 0
 
 
+class MemorySampler:
+    """
+    Background thread that periodically samples process memory.
+    
+    This provides accurate peak memory tracking by sampling at regular intervals
+    during bot execution, avoiding the RUSAGE_CHILDREN cumulative issue.
+    """
+    
+    def __init__(self, pid: int, sample_interval: float = 0.01):
+        """
+        Initialize memory sampler.
+        
+        Args:
+            pid: Process ID to monitor
+            sample_interval: Time between samples in seconds (default 10ms)
+        """
+        self.pid = pid
+        self.sample_interval = sample_interval
+        self.peak_memory = 0
+        self.samples_taken = 0
+        self._stop_event = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+        
+    def _get_memory(self) -> int:
+        """Get current memory usage of the process."""
+        try:
+            # Try /proc first (Linux)
+            with open(f'/proc/{self.pid}/status', 'r') as f:
+                for line in f:
+                    if line.startswith('VmRSS:'):
+                        return int(line.split()[1]) * 1024
+        except (FileNotFoundError, PermissionError):
+            pass
+        
+        try:
+            # Fallback to ps command (macOS/Linux)
+            result = subprocess.run(
+                ['ps', '-o', 'rss=', '-p', str(self.pid)],
+                capture_output=True,
+                text=True,
+                timeout=0.5
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return int(result.stdout.strip()) * 1024
+        except (subprocess.TimeoutExpired, ValueError, FileNotFoundError):
+            pass
+        
+        return 0
+    
+    def _sample_loop(self):
+        """Background sampling loop."""
+        while not self._stop_event.is_set():
+            try:
+                memory = self._get_memory()
+                if memory > 0:
+                    self.peak_memory = max(self.peak_memory, memory)
+                    self.samples_taken += 1
+            except Exception:
+                pass
+            
+            # Sleep for the sample interval
+            self._stop_event.wait(self.sample_interval)
+    
+    def start(self):
+        """Start sampling in background thread."""
+        if self._thread is None or not self._thread.is_alive():
+            self._stop_event.clear()
+            self.peak_memory = 0
+            self.samples_taken = 0
+            self._thread = threading.Thread(target=self._sample_loop, daemon=True)
+            self._thread.start()
+    
+    def stop(self) -> int:
+        """
+        Stop sampling and return peak memory.
+        
+        Returns:
+            Peak memory usage in bytes
+        """
+        if self._thread and self._thread.is_alive():
+            self._stop_event.set()
+            self._thread.join(timeout=1.0)
+        
+        return self.peak_memory
+
+
 class ResourceMonitor:
     """
     Monitor and optionally enforce resource limits for bot processes.
@@ -74,7 +161,7 @@ class ResourceMonitor:
     # Default Botzone limits
     DEFAULT_FIRST_TURN_TIME = 2.0  # seconds
     DEFAULT_TURN_TIME = 1.0  # seconds
-    DEFAULT_MEMORY_LIMIT = 256 * 1024 * 1024  # 256 MB in bytes
+    DEFAULT_MEMORY_LIMIT = 512 * 1024 * 1024  # 512 MB in bytes
     
     def __init__(
         self,

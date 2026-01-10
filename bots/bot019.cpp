@@ -62,7 +62,7 @@ inline uint32_t fast_rand() {
 // 250k nodes * ~60 moves average = ~15 million moves.
 // 15M * 6 bytes = 90MB. Fits in 256MB easily.
 const int MAX_NODES = 250000;
-const int MAX_MOVES_POOL = 18000000; 
+const int MAX_MOVES_POOL = 10000000; 
 
 class MCTSNode;
 

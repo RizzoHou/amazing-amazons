@@ -18,7 +18,7 @@ from typing import Optional, List, Tuple
 from enum import Enum
 
 from .resource_monitor import (
-    ResourceMonitor, TurnMetrics, ViolationType, get_child_max_memory
+    ResourceMonitor, TurnMetrics, ViolationType, MemorySampler
 )
 
 
@@ -192,6 +192,10 @@ class TraditionalBot(BaseBotRunner):
             
             pid = self.process.pid
             
+            # Start memory sampling in background
+            memory_sampler = MemorySampler(pid, sample_interval=0.01)
+            memory_sampler.start()
+            
             # Send input and wait for response
             try:
                 stdout, stderr = self.process.communicate(
@@ -200,10 +204,11 @@ class TraditionalBot(BaseBotRunner):
                 )
             except subprocess.TimeoutExpired:
                 elapsed = time.perf_counter() - start_time
-                self._kill_process()
                 
-                # Get memory from child process after it exits
-                memory = get_child_max_memory()
+                # Stop memory sampling and get peak
+                memory = memory_sampler.stop()
+                
+                self._kill_process()
                 
                 # Record metrics
                 metrics = self.resource_monitor.measure_turn(
@@ -220,9 +225,8 @@ class TraditionalBot(BaseBotRunner):
             
             elapsed = time.perf_counter() - start_time
             
-            # For traditional bots, get memory usage from child process stats
-            # since the process has already exited by now
-            memory = get_child_max_memory()
+            # Stop memory sampling and get peak memory
+            memory = memory_sampler.stop()
             
             # Record metrics
             metrics = self.resource_monitor.measure_turn(
@@ -231,7 +235,7 @@ class TraditionalBot(BaseBotRunner):
                 elapsed_time=elapsed,
                 is_first_turn=is_first_turn
             )
-            # Use child process memory (more accurate for traditional bots)
+            # Use sampled peak memory
             metrics.memory_bytes = memory
             self.turn_metrics.append(metrics)
             
@@ -384,6 +388,10 @@ class LongLiveBot(BaseBotRunner):
         start_time = time.perf_counter()
         pid = self.process.pid if self.process else 0
         
+        # Start memory sampling
+        memory_sampler = MemorySampler(pid, sample_interval=0.01)
+        memory_sampler.start()
+        
         try:
             if is_first_turn or not self.is_running:
                 # Send full protocol: turn number + request
@@ -401,6 +409,9 @@ class LongLiveBot(BaseBotRunner):
             elapsed = time.perf_counter() - start_time
             
             if move is None:
+                # Stop memory sampling
+                memory = memory_sampler.stop()
+                
                 # Timeout or process died
                 metrics = self.resource_monitor.measure_turn(
                     pid=pid,
@@ -408,6 +419,7 @@ class LongLiveBot(BaseBotRunner):
                     elapsed_time=elapsed,
                     is_first_turn=is_first_turn
                 )
+                metrics.memory_bytes = memory
                 if elapsed >= time_limit:
                     metrics.violation = ViolationType.TIME_LIMIT_EXCEEDED
                     self.turn_metrics.append(metrics)
@@ -423,12 +435,15 @@ class LongLiveBot(BaseBotRunner):
                 move = self._read_line_with_timeout(read_timeout)
                 if move is None:
                     elapsed = time.perf_counter() - start_time
+                    memory = memory_sampler.stop()
+                    
                     metrics = self.resource_monitor.measure_turn(
                         pid=pid,
                         turn_number=self.current_turn,
                         elapsed_time=elapsed,
                         is_first_turn=is_first_turn
                     )
+                    metrics.memory_bytes = memory
                     self.turn_metrics.append(metrics)
                     return "", BotResult.CRASH
             
@@ -441,14 +456,17 @@ class LongLiveBot(BaseBotRunner):
                 # It might have output something else or nothing
                 self.is_running = False
             
-            # Record metrics
+            # Stop memory sampling and record metrics
             elapsed = time.perf_counter() - start_time
+            memory = memory_sampler.stop()
+            
             metrics = self.resource_monitor.measure_turn(
                 pid=pid,
                 turn_number=self.current_turn,
                 elapsed_time=elapsed,
                 is_first_turn=is_first_turn
             )
+            metrics.memory_bytes = memory
             self.turn_metrics.append(metrics)
             
             # Check for violations
