@@ -7,8 +7,23 @@
 #include <sstream>
 #include <cstring>
 #include <cstdint>
+#include <cstdio>
+#include <cstdarg>
 
 using namespace std;
+
+// --- DEBUG LOGGING ---
+void log_debug(const char* format, ...) {
+    FILE* f = fopen("/Users/rizzohou/projects/amazing-amazons/logs/bot030_debug.log", "a");
+    if (!f) return;
+    
+    va_list args;
+    va_start(args, format);
+    vfprintf(f, format, args);
+    va_end(args);
+    
+    fclose(f);
+}
 
 // --- CONSTANTS ---
 // board size: 8 * 8
@@ -30,13 +45,16 @@ const int DIRECTIONS[8][2] = {
     {1, 1}    // SE
 };
 
+#pragma pack(push, 1)
 struct Move {
-    int8_t x0, y0, x1, y1, x2, y2;
-    // No-arg constructor for array init
-    Move() = default; 
-    Move(int a, int b, int c, int d, int e, int f) 
-        : x0((int8_t)a), y0((int8_t)b), x1((int8_t)c), y1((int8_t)d), x2((int8_t)e), y2((int8_t)f) {}
+    uint8_t from, to, arrow;
+    
+    Move() = default;
+    Move(int from_sq, int to_sq, int arrow_sq) 
+        : from(from_sq), to(to_sq), arrow(arrow_sq) {}
 };
+#pragma pack(pop)
+static_assert(sizeof(Move) == 3, "Move must be 3 bytes");
 
 // --- FAST RNG ---
 static uint32_t xorshift_state;
@@ -54,8 +72,8 @@ inline uint32_t fast_rand() {
 
 // --- MEMORY POOLS ---
 // We need a large pool for moves because Amazons has a huge branching factor.
-const int MAX_NODES = 10000000;
-const int MAX_MOVES_POOL = 70000000;
+const int MAX_NODES = 10000000; // 5
+const int MAX_MOVES_POOL = 70000000; // 35000000
 
 class MCTSNode;
 
@@ -129,9 +147,9 @@ public:
                             int a_idx = ax * 8 + ay;
                             if (grid[a_idx] != EMPTY && a_idx != p) break; // Blocked and not self
                             
-                            // Emplace move
+                            // Emplace move - now using square indices
                             if (move_pool_ptr < MAX_MOVES_POOL) {
-                                move_pool[move_pool_ptr++] = Move(px, py, nx, ny, ax, ay);
+                                move_pool[move_pool_ptr++] = Move(p, n_idx, a_idx);
                                 count++;
                             } else {
                                 // Pool full, dangerous but rare
@@ -146,14 +164,10 @@ public:
     }
     
     void apply_move(const Move& m) {
-        int p_idx = m.x0 * 8 + m.y0;
-        int t_idx = m.x1 * 8 + m.y1;
-        int s_idx = m.x2 * 8 + m.y2;
-        
-        int piece = grid[p_idx];
-        grid[p_idx] = EMPTY;
-        grid[t_idx] = piece;
-        grid[s_idx] = OBSTACLE;
+        int piece = grid[m.from];
+        grid[m.from] = EMPTY;
+        grid[m.to] = piece;
+        grid[m.arrow] = OBSTACLE;
     }
 };
 
@@ -337,7 +351,7 @@ double evaluate(const Board& board, int root_player, int turn) {
     
     scores[4] = (double)(calc_mobility(board.grid, my_pieces) - calc_mobility(board.grid, opp_pieces));
     
-    int idx = (turn >= 28) ? 27 : turn;
+    int idx = (turn >= 28) ? 27 : (turn - 1);
     double total = 0;
     for(int i=0; i<5; ++i) total += scores[i] * WEIGHTS_TABLE[idx][i];
     
@@ -350,12 +364,21 @@ MCTSNode* best_child_global = nullptr;
 int max_visits_global = -1;
 
 Move search(const Board& root_state, int root_player, int turn, chrono::steady_clock::time_point start, double timeout) {
+    // Debug: log search start
+    auto search_start = chrono::steady_clock::now();
+    double elapsed_before_search = chrono::duration<double>(search_start - start).count();
+    log_debug("[Search Start] turn=%d, timeout=%.3f, elapsed_before_search=%.3f\n", 
+              turn, timeout, elapsed_before_search);
+    
     node_pool_ptr = 0;
     move_pool_ptr = 0;
     
     MCTSNode* root = new_node(nullptr, Move(), -root_player);
     // Generate moves for root
     root_state.get_legal_moves(root_player, root->moves_start_idx, root->moves_count);
+    
+    log_debug("[Move Gen] root_moves=%d, move_pool_ptr=%d\n", 
+              root->moves_count, move_pool_ptr);
     
     best_child_global = nullptr;
     max_visits_global = -1;
@@ -364,12 +387,21 @@ Move search(const Board& root_state, int root_player, int turn, chrono::steady_c
     float C = 0.177f * std::exp(-0.008f * (turn - 1.41f));
     
     auto deadline = start + chrono::duration<double>(timeout);
+    auto now_at_start = chrono::steady_clock::now();
+    double time_until_deadline = chrono::duration<double>(deadline - now_at_start).count();
+    log_debug("[Timing] deadline_offset=%.3f, time_until_deadline=%.3f\n", 
+              timeout, time_until_deadline);
     
     while(true) {
         if ((iterations & 0xFF) == 0) {
-            if (chrono::steady_clock::now() >= deadline) break;
-            if (node_pool_ptr > MAX_NODES - 500) break;
-            if (move_pool_ptr > MAX_MOVES_POOL - 5000) break;
+            auto now = chrono::steady_clock::now();
+            if (now >= deadline) {
+                log_debug("[Exit] Timeout at iteration=%d, time_since_start=%.3f\n", 
+                         iterations, chrono::duration<double>(now - search_start).count());
+                break;
+            }
+            // if (node_pool_ptr > MAX_NODES - 500) break;
+            // if (move_pool_ptr > MAX_MOVES_POOL - 5000) break;
         }
         
         MCTSNode* node = root;
@@ -411,6 +443,7 @@ Move search(const Board& root_state, int root_player, int turn, chrono::steady_c
                     // Current player stuck -> Previous player (who just moved) wins
                     win_prob = (current_player == root_player) ? 0.0f : 1.0f;
                     terminal = true;
+                    log_debug("[Terminal] No moves for player after expansion\n");
                 }
                 
                 node->add_child(new_n);
@@ -418,11 +451,13 @@ Move search(const Board& root_state, int root_player, int turn, chrono::steady_c
             } else {
                 // OOM
                 terminal = false;
+                log_debug("[OOM] node_pool_ptr=%d >= MAX_NODES=%d\n", node_pool_ptr, MAX_NODES);
             }
         } else if (node->first_child == nullptr) {
             // Terminal: no moves and no children -> player_just_moved wins
             win_prob = (node->player_just_moved == root_player) ? 1.0f : 0.0f;
             terminal = true;
+            log_debug("[Terminal] No moves and no children\n");
         }
         
         // Sim/Eval
@@ -446,11 +481,31 @@ Move search(const Board& root_state, int root_player, int turn, chrono::steady_c
         }
         
         iterations++;
+        
+        // Log milestones
+        if ((iterations % 10000) == 0) {
+            auto now = chrono::steady_clock::now();
+            double elapsed = chrono::duration<double>(now - search_start).count();
+            log_debug("[Progress] iterations=%d, elapsed=%.3f, node_pool=%d, move_pool=%d\n",
+                     iterations, elapsed, node_pool_ptr, move_pool_ptr);
+        }
     }
     
-    if (best_child_global) return best_child_global->move;
-    if (root->first_child) return root->first_child->move;
-    return Move(-1,-1,-1,-1,-1,-1);
+    auto search_end = chrono::steady_clock::now();
+    double total_search_time = chrono::duration<double>(search_end - search_start).count();
+    log_debug("[Search End] iterations=%d, total_time=%.3f, node_pool=%d, move_pool=%d\n",
+             iterations, total_search_time, node_pool_ptr, move_pool_ptr);
+    
+    if (best_child_global) {
+        log_debug("[Result] Best child found with visits=%d\n", max_visits_global);
+        return best_child_global->move;
+    }
+    if (root->first_child) {
+        log_debug("[Result] Using first child (no best child tracked)\n");
+        return root->first_child->move;
+    }
+    log_debug("[Result] No valid move found, returning invalid marker\n");
+    return Move(255, 255, 255); // Invalid move marker
 }
 
 int main() {
@@ -458,13 +513,22 @@ int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
     
+    // Clear debug log at start of each run
+    FILE* f = fopen("/tmp/bot030_debug.log", "w");
+    if (f) fclose(f);
+    
+    log_debug("[Main Start] Program begins\n");
+    
     // Allocate node pool on heap
     node_pool = new MCTSNode[MAX_NODES];
+    log_debug("[Memory] Node pool allocated: %d nodes\n", MAX_NODES);
     
     Board board;
     string line;
     if (!getline(cin, line)) return 0;
     int turn = stoi(line);
+    
+    log_debug("[Input] turn=%d\n", turn);
     
     vector<string> lines;
     int count = 2 * turn - 1;
@@ -479,27 +543,56 @@ int main() {
         if(v == -1) my_color = BLACK; else my_color = WHITE;
     }
     
+    log_debug("[Color] my_color=%d\n", my_color);
+    
     for(const auto& l : lines) {
         stringstream ss(l);
         int c[6];
         ss >> c[0];
         if(c[0] == -1) continue;
         for(int k=1; k<6; ++k) ss >> c[k];
-        board.apply_move(Move(c[0], c[1], c[2], c[3], c[4], c[5]));
+        // Convert coordinates to square indices
+        int from_sq = c[0] * 8 + c[1];
+        int to_sq = c[2] * 8 + c[3];
+        int arrow_sq = c[4] * 8 + c[5];
+        board.apply_move(Move(from_sq, to_sq, arrow_sq));
     }
     
     seed_rng();
     
     double limit = (turn == 1) ? 1.95 : 0.98;
-    Move best = search(board, my_color, turn, start_time, limit - 0.05);
+    double timeout = limit - 0.30;
+    auto time_before_search = chrono::steady_clock::now();
+    double elapsed_before_search = chrono::duration<double>(time_before_search - start_time).count();
+    log_debug("[Before Search] elapsed=%.3f, limit=%.3f, timeout=%.3f\n", 
+              elapsed_before_search, limit, timeout);
     
-    if(best.x0 != -1) {
-        cout << (int)best.x0 << " " << (int)best.y0 << " " 
-             << (int)best.x1 << " " << (int)best.y1 << " " 
-             << (int)best.x2 << " " << (int)best.y2 << endl;
+    Move best = search(board, my_color, turn, start_time, timeout);
+    
+    auto end_time = chrono::steady_clock::now();
+    double total_time = chrono::duration<double>(end_time - start_time).count();
+    
+    if(best.from != 255) {
+        // Convert square indices back to coordinates
+        int x0 = best.from / 8;
+        int y0 = best.from % 8;
+        int x1 = best.to / 8;
+        int y1 = best.to % 8;
+        int x2 = best.arrow / 8;
+        int y2 = best.arrow % 8;
+        
+        log_debug("[Output] Move: %d %d %d %d %d %d, total_time=%.3f\n",
+                 x0, y0, x1, y1, x2, y2, total_time);
+        
+        cout << x0 << " " << y0 << " " 
+             << x1 << " " << y1 << " " 
+             << x2 << " " << y2 << endl;
     } else {
+        log_debug("[Output] Invalid move, total_time=%.3f\n", total_time);
         cout << "-1 -1 -1 -1 -1 -1" << endl;
     }
+    
+    log_debug("[Main End] Program ends, total_time=%.3f\n", total_time);
     
     // delete[] node_pool; // OS cleans up
     return 0;

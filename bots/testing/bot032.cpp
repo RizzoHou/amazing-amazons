@@ -7,8 +7,23 @@
 #include <sstream>
 #include <cstring>
 #include <cstdint>
+#include <cstdio>
+#include <cstdarg>
 
 using namespace std;
+
+// --- DEBUG LOGGING ---
+void log_interrupt(const char* format, ...) {
+    FILE* f = fopen("logs/bot032_search_interrupt.log", "a");
+    if (!f) return;
+    
+    va_list args;
+    va_start(args, format);
+    vfprintf(f, format, args);
+    va_end(args);
+    
+    fclose(f);
+}
 
 // --- CONSTANTS ---
 // board size: 8 * 8
@@ -30,13 +45,16 @@ const int DIRECTIONS[8][2] = {
     {1, 1}    // SE
 };
 
+#pragma pack(push, 1)
 struct Move {
-    int8_t x0, y0, x1, y1, x2, y2;
-    // No-arg constructor for array init
-    Move() = default; 
-    Move(int a, int b, int c, int d, int e, int f) 
-        : x0((int8_t)a), y0((int8_t)b), x1((int8_t)c), y1((int8_t)d), x2((int8_t)e), y2((int8_t)f) {}
+    uint8_t from, to, arrow;
+    
+    Move() = default;
+    Move(int from_sq, int to_sq, int arrow_sq) 
+        : from(from_sq), to(to_sq), arrow(arrow_sq) {}
 };
+#pragma pack(pop)
+static_assert(sizeof(Move) == 3, "Move must be 3 bytes");
 
 // --- FAST RNG ---
 static uint32_t xorshift_state;
@@ -52,14 +70,21 @@ inline uint32_t fast_rand() {
     return xorshift_state = x;
 }
 
-// --- MEMORY POOLS ---
-// We need a large pool for moves because Amazons has a huge branching factor.
-const int MAX_NODES = 10000000;
-const int MAX_MOVES_POOL = 70000000;
+// --- MEMORY POOLS (Maximized for RSS-based memory management) ---
+// Botzone monitors RSS (Resident Set Size), not allocated memory.
+// Only touched/written memory counts toward the 512MB limit.
+// We can allocate large arrays; unused portions don't consume RSS.
+const int MAX_NODES = 10000000;       // 10M nodes - only used ones consume RSS
+const int MAX_MOVES_POOL = 200000000; // 200M moves - only used ones consume RSS
+
+// RSS limit estimation (with safety margin below 512MB)
+const size_t RSS_LIMIT = 480ULL * 1024 * 1024; // 480MB
+const size_t NODE_SIZE = 40; // Approximate sizeof(MCTSNode) - calculated manually for safety
+const size_t MOVE_SIZE = 3;  // sizeof(Move) = 3 bytes (packed)
 
 class MCTSNode;
 
-// Global storage
+// Global storage - large allocation, RSS only grows as we use it
 Move move_pool[MAX_MOVES_POOL];
 int move_pool_ptr = 0;
 
@@ -129,14 +154,9 @@ public:
                             int a_idx = ax * 8 + ay;
                             if (grid[a_idx] != EMPTY && a_idx != p) break; // Blocked and not self
                             
-                            // Emplace move
-                            if (move_pool_ptr < MAX_MOVES_POOL) {
-                                move_pool[move_pool_ptr++] = Move(px, py, nx, ny, ax, ay);
-                                count++;
-                            } else {
-                                // Pool full, dangerous but rare
-                                break; 
-                            }
+                            // Emplace move - now using square indices
+                            move_pool[move_pool_ptr++] = Move(p, n_idx, a_idx);
+                            count++;
                         }
                     }
                 }
@@ -146,14 +166,10 @@ public:
     }
     
     void apply_move(const Move& m) {
-        int p_idx = m.x0 * 8 + m.y0;
-        int t_idx = m.x1 * 8 + m.y1;
-        int s_idx = m.x2 * 8 + m.y2;
-        
-        int piece = grid[p_idx];
-        grid[p_idx] = EMPTY;
-        grid[t_idx] = piece;
-        grid[s_idx] = OBSTACLE;
+        int piece = grid[m.from];
+        grid[m.from] = EMPTY;
+        grid[m.to] = piece;
+        grid[m.arrow] = OBSTACLE;
     }
 };
 
@@ -210,10 +226,14 @@ public:
 
 // Allocator wrapper
 MCTSNode* new_node(MCTSNode* p, Move m, int pjm) {
-    if (node_pool_ptr >= MAX_NODES) return nullptr;
     MCTSNode* ptr = &node_pool[node_pool_ptr++];
     ptr->init(p, m, pjm);
     return ptr;
+}
+
+// Inline function to estimate current RSS usage
+inline size_t estimate_used_memory() {
+    return (size_t)node_pool_ptr * NODE_SIZE + (size_t)move_pool_ptr * MOVE_SIZE;
 }
 
 // --- EVALUATION HELPERS ---
@@ -337,7 +357,7 @@ double evaluate(const Board& board, int root_player, int turn) {
     
     scores[4] = (double)(calc_mobility(board.grid, my_pieces) - calc_mobility(board.grid, opp_pieces));
     
-    int idx = (turn >= 28) ? 27 : turn;
+    int idx = (turn >= 28) ? 27 : (turn - 1);
     double total = 0;
     for(int i=0; i<5; ++i) total += scores[i] * WEIGHTS_TABLE[idx][i];
     
@@ -348,6 +368,9 @@ double evaluate(const Board& board, int root_player, int turn) {
 
 MCTSNode* best_child_global = nullptr;
 int max_visits_global = -1;
+
+// Enum to track why search stopped
+enum StopReason { NONE, TIMEOUT, MEMORY_LIMIT };
 
 Move search(const Board& root_state, int root_player, int turn, chrono::steady_clock::time_point start, double timeout) {
     node_pool_ptr = 0;
@@ -364,12 +387,21 @@ Move search(const Board& root_state, int root_player, int turn, chrono::steady_c
     float C = 0.177f * std::exp(-0.008f * (turn - 1.41f));
     
     auto deadline = start + chrono::duration<double>(timeout);
+    auto search_start = chrono::steady_clock::now();
+    StopReason stop_reason = NONE;
     
     while(true) {
         if ((iterations & 0xFF) == 0) {
-            if (chrono::steady_clock::now() >= deadline) break;
-            if (node_pool_ptr > MAX_NODES - 500) break;
-            if (move_pool_ptr > MAX_MOVES_POOL - 5000) break;
+            auto now = chrono::steady_clock::now();
+            if (now >= deadline) {
+                stop_reason = TIMEOUT;
+                break;
+            }
+            // RSS-based memory check: stop when approaching 480MB used memory
+            if (estimate_used_memory() > RSS_LIMIT) {
+                stop_reason = MEMORY_LIMIT;
+                break;
+            }
         }
         
         MCTSNode* node = root;
@@ -402,23 +434,18 @@ Move search(const Board& root_state, int root_player, int turn, chrono::steady_c
             current_player = -current_player;
             
             MCTSNode* new_n = new_node(node, m, -current_player);
-            if (new_n) {
-                // Generate moves for new node (lazy)
-                state.get_legal_moves(current_player, new_n->moves_start_idx, new_n->moves_count);
-                
-                // Terminal check
-                if (new_n->moves_count == 0) {
-                    // Current player stuck -> Previous player (who just moved) wins
-                    win_prob = (current_player == root_player) ? 0.0f : 1.0f;
-                    terminal = true;
-                }
-                
-                node->add_child(new_n);
-                node = new_n;
-            } else {
-                // OOM
-                terminal = false;
+            // Generate moves for new node (lazy)
+            state.get_legal_moves(current_player, new_n->moves_start_idx, new_n->moves_count);
+            
+            // Terminal check
+            if (new_n->moves_count == 0) {
+                // Current player stuck -> Previous player (who just moved) wins
+                win_prob = (current_player == root_player) ? 0.0f : 1.0f;
+                terminal = true;
             }
+            
+            node->add_child(new_n);
+            node = new_n;
         } else if (node->first_child == nullptr) {
             // Terminal: no moves and no children -> player_just_moved wins
             win_prob = (node->player_just_moved == root_player) ? 1.0f : 0.0f;
@@ -448,9 +475,26 @@ Move search(const Board& root_state, int root_player, int turn, chrono::steady_c
         iterations++;
     }
     
+    // Log search interruption reason and statistics
+    auto search_end = chrono::steady_clock::now();
+    double search_time = chrono::duration<double>(search_end - search_start).count();
+    size_t used_memory = estimate_used_memory();
+    
+    if (stop_reason == TIMEOUT) {
+        log_interrupt("[Bot032] Search interrupted: TIMEOUT - turn=%d, iterations=%d, time=%.3fs, memory=%zu bytes (%.2f MB), nodes=%d, moves=%d\n",
+                     turn, iterations, search_time, used_memory, used_memory / (1024.0 * 1024.0), node_pool_ptr, move_pool_ptr);
+    } else if (stop_reason == MEMORY_LIMIT) {
+        log_interrupt("[Bot032] Search interrupted: MEMORY_LIMIT - turn=%d, iterations=%d, time=%.3fs, memory=%zu bytes (%.2f MB), nodes=%d, moves=%d, limit=%zu bytes (%.2f MB)\n",
+                     turn, iterations, search_time, used_memory, used_memory / (1024.0 * 1024.0), node_pool_ptr, move_pool_ptr, RSS_LIMIT, RSS_LIMIT / (1024.0 * 1024.0));
+    } else {
+        // Should not happen, but log anyway
+        log_interrupt("[Bot032] Search completed without interruption - turn=%d, iterations=%d, time=%.3fs, memory=%zu bytes (%.2f MB), nodes=%d, moves=%d\n",
+                     turn, iterations, search_time, used_memory, used_memory / (1024.0 * 1024.0), node_pool_ptr, move_pool_ptr);
+    }
+    
     if (best_child_global) return best_child_global->move;
     if (root->first_child) return root->first_child->move;
-    return Move(-1,-1,-1,-1,-1,-1);
+    return Move(255, 255, 255); // Invalid move marker
 }
 
 int main() {
@@ -485,18 +529,30 @@ int main() {
         ss >> c[0];
         if(c[0] == -1) continue;
         for(int k=1; k<6; ++k) ss >> c[k];
-        board.apply_move(Move(c[0], c[1], c[2], c[3], c[4], c[5]));
+        // Convert coordinates to square indices
+        int from_sq = c[0] * 8 + c[1];
+        int to_sq = c[2] * 8 + c[3];
+        int arrow_sq = c[4] * 8 + c[5];
+        board.apply_move(Move(from_sq, to_sq, arrow_sq));
     }
     
     seed_rng();
     
     double limit = (turn == 1) ? 1.95 : 0.98;
-    Move best = search(board, my_color, turn, start_time, limit - 0.05);
+    Move best = search(board, my_color, turn, start_time, limit - 0.10);
     
-    if(best.x0 != -1) {
-        cout << (int)best.x0 << " " << (int)best.y0 << " " 
-             << (int)best.x1 << " " << (int)best.y1 << " " 
-             << (int)best.x2 << " " << (int)best.y2 << endl;
+    if(best.from != 255) {
+        // Convert square indices back to coordinates
+        int x0 = best.from / 8;
+        int y0 = best.from % 8;
+        int x1 = best.to / 8;
+        int y1 = best.to % 8;
+        int x2 = best.arrow / 8;
+        int y2 = best.arrow % 8;
+        
+        cout << x0 << " " << y0 << " " 
+             << x1 << " " << y1 << " " 
+             << x2 << " " << y2 << endl;
     } else {
         cout << "-1 -1 -1 -1 -1 -1" << endl;
     }
