@@ -462,13 +462,10 @@ Move search(const Board& root_state, int root_player, int turn,
             }
             // If new_node failed (OOM), just evaluate current state
         }
-        // NEW: If expansion disabled but node not expanded, just evaluate the state
-        else if (!allow_expand && !node->moves_generated) {
-            // Don't expand - just evaluate the current leaf state
-            // Mark as "not generated" so we know it's not truly terminal
-        }
         
-        // Evaluate if not terminal
+        // Evaluate the state - this handles:
+        // - Expanded nodes that need evaluation
+        // - Nodes that couldn't be expanded due to pool exhaustion (allow_expand=false)
         if (!terminal) {
             win_prob = (float)evaluate(state, root_player, turn);
         }
