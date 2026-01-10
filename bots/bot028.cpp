@@ -30,13 +30,16 @@ const int DIRECTIONS[8][2] = {
     {1, 1}    // SE
 };
 
+#pragma pack(push, 1)
 struct Move {
-    int8_t x0, y0, x1, y1, x2, y2;
-    // No-arg constructor for array init
-    Move() = default; 
-    Move(int a, int b, int c, int d, int e, int f) 
-        : x0((int8_t)a), y0((int8_t)b), x1((int8_t)c), y1((int8_t)d), x2((int8_t)e), y2((int8_t)f) {}
+    uint8_t from, to, arrow;
+    
+    Move() : from(0), to(0), arrow(0) {}
+    Move(int from_sq, int to_sq, int arrow_sq) 
+        : from(from_sq), to(to_sq), arrow(arrow_sq) {}
 };
+#pragma pack(pop)
+static_assert(sizeof(Move) == 3, "Move must be 3 bytes");
 
 // --- FAST RNG ---
 static uint32_t xorshift_state;
@@ -131,9 +134,9 @@ public:
                             int a_idx = ax * 8 + ay;
                             if (grid[a_idx] != EMPTY && a_idx != p) break; // Blocked and not self
                             
-                            // Emplace move
+                            // Emplace move - now using square indices
                             if (move_pool_ptr < MAX_MOVES_POOL) {
-                                move_pool[move_pool_ptr++] = Move(px, py, nx, ny, ax, ay);
+                                move_pool[move_pool_ptr++] = Move(p, n_idx, a_idx);
                                 count++;
                             } else {
                                 // Pool full, dangerous but rare
@@ -148,14 +151,10 @@ public:
     }
     
     void apply_move(const Move& m) {
-        int p_idx = m.x0 * 8 + m.y0;
-        int t_idx = m.x1 * 8 + m.y1;
-        int s_idx = m.x2 * 8 + m.y2;
-        
-        int piece = grid[p_idx];
-        grid[p_idx] = EMPTY;
-        grid[t_idx] = piece;
-        grid[s_idx] = OBSTACLE;
+        int piece = grid[m.from];
+        grid[m.from] = EMPTY;
+        grid[m.to] = piece;
+        grid[m.arrow] = OBSTACLE;
     }
 };
 
@@ -339,7 +338,7 @@ double evaluate(const Board& board, int root_player, int turn) {
     
     scores[4] = (double)(calc_mobility(board.grid, my_pieces) - calc_mobility(board.grid, opp_pieces));
     
-    int idx = (turn >= 28) ? 27 : turn;
+    int idx = (turn >= 28) ? 27 : (turn - 1);
     double total = 0;
     for(int i=0; i<5; ++i) total += scores[i] * WEIGHTS_TABLE[idx][i];
     
@@ -452,7 +451,7 @@ Move search(const Board& root_state, int root_player, int turn, chrono::steady_c
     
     if (best_child_global) return best_child_global->move;
     if (root->first_child) return root->first_child->move;
-    return Move(-1,-1,-1,-1,-1,-1);
+    return Move(255, 255, 255); // Invalid move marker
 }
 
 int main() {
@@ -487,7 +486,11 @@ int main() {
         ss >> c[0];
         if(c[0] == -1) continue;
         for(int k=1; k<6; ++k) ss >> c[k];
-        board.apply_move(Move(c[0], c[1], c[2], c[3], c[4], c[5]));
+        // Convert coordinates to square indices
+        int from_sq = c[0] * 8 + c[1];
+        int to_sq = c[2] * 8 + c[3];
+        int arrow_sq = c[4] * 8 + c[5];
+        board.apply_move(Move(from_sq, to_sq, arrow_sq));
     }
     
     seed_rng();
@@ -495,10 +498,18 @@ int main() {
     double limit = (turn == 1) ? 1.95 : 0.98;
     Move best = search(board, my_color, turn, start_time, limit - 0.05);
     
-    if(best.x0 != -1) {
-        cout << (int)best.x0 << " " << (int)best.y0 << " " 
-             << (int)best.x1 << " " << (int)best.y1 << " " 
-             << (int)best.x2 << " " << (int)best.y2 << endl;
+    if(best.from != 255) {
+        // Convert square indices back to coordinates
+        int x0 = best.from / 8;
+        int y0 = best.from % 8;
+        int x1 = best.to / 8;
+        int y1 = best.to % 8;
+        int x2 = best.arrow / 8;
+        int y2 = best.arrow % 8;
+        
+        cout << x0 << " " << y0 << " " 
+             << x1 << " " << y1 << " " 
+             << x2 << " " << y2 << endl;
     } else {
         cout << "-1 -1 -1 -1 -1 -1" << endl;
     }
