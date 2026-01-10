@@ -72,7 +72,7 @@ Bots must follow the Botzone Amazons protocol:
 
 ## CLI Commands
 
-The tournament system provides a command-line interface with four main commands:
+The tournament system provides a command-line interface with five main commands:
 
 ```bash
 python -m scripts.tournament.cli <command> [options]
@@ -83,6 +83,7 @@ python -m scripts.tournament.cli <command> [options]
 | Command | Description | Example |
 |---------|-------------|---------|
 | `match` | Run a single match between two bots | `match bot000 bot003` |
+| `series` | Run multiple matches between two bots | `series bot021 bot022 -n 10` |
 | `tournament` | Run a round-robin tournament | `tournament bot000 bot001 bot002` |
 | `test` | Run specific tests | `test bot002` or `test bot000_vs_bot003` |
 | `compile` | Compile a bot from source | `compile bot003` |
@@ -129,6 +130,72 @@ The system will:
 4. Track board state and validate moves
 5. Detect end conditions (no legal moves)
 6. Report winner and number of moves
+
+## Running Series (Head-to-Head Matches)
+
+The `series` command allows running multiple matches between two specific bots with configurable color assignments.
+
+### Basic Series
+
+Run a series of matches between two bots:
+
+```bash
+python -m scripts.tournament.cli series bot021 bot022 -n 10
+```
+
+This runs 10 matches with colors split evenly (5 matches with bot021 as Black, 5 with bot021 as White).
+
+### Configuring Color Distribution
+
+Specify how many matches a bot plays as Black:
+
+```bash
+# bot021 plays Black in 8 out of 10 matches
+python -m scripts.tournament.cli series bot021 bot022 -n 10 --bot1-black 8
+
+# bot021 plays Black in all matches
+python -m scripts.tournament.cli series bot021 bot022 -n 10 --bot1-black 10
+```
+
+### Series Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-n, --matches` | Total number of matches | 10 |
+| `--bot1-black` | Matches where bot1 plays Black | Half of total |
+| `--report, -r` | Generate markdown report | Off |
+| `--unlimited, -u` | Don't enforce time limits | Off |
+| `--quiet, -q` | Reduce output | Off |
+
+### Output Example
+
+```
+Series: bot021 vs bot022
+Total matches: 10
+  bot021 as Black: 5
+  bot021 as White: 5
+Time limits: 2.0s / 1.0s
+
+Match 1/10: bot021 (Black) vs bot022 (White)
+...
+  Running: bot021 1-0 bot022
+
+...
+
+SERIES SUMMARY
+
+bot021:
+  Total: 7 wins, 3 losses
+  As Black: 4 wins
+  As White: 3 wins
+
+bot022:
+  Total: 3 wins, 7 losses
+  As Black: 2 wins
+  As White: 1 wins
+
+Win rate: bot021 70.0% - bot022 30.0%
+```
 
 ## Running Tournaments
 
